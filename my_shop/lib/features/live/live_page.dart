@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
-import 'widgets/live_video_player.dart';
+import 'widgets/facebook_live_player.dart';
+import '../chat/chat_page.dart';
 
 class LivePage extends StatelessWidget {
   const LivePage({super.key});
+
+  static const fbUrl = 'https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Fgonelivegaming%2Fvideos%2F659033760590366%2F&show_text=false&width=476&t=0';
+
   @override
   Widget build(BuildContext context) {
-    // Demo 用公用串流；正式環境建議採 HLS/LL-HLS 或 WebRTC（如 LiveKit）
-    const demoUrl = 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8';
     return Scaffold(
       appBar: AppBar(title: const Text('直播')),
-      body: ListView(
-        padding: const EdgeInsets.all(12),
+      body: Column(
         children: const [
-          LiveVideoPlayer(url: demoUrl),
-          SizedBox(height: 12),
-          Text('直播間介紹：這裡可展示商品、聊天室、點讚動畫等擴充組件。'),
+          Expanded(flex: 3, child: FacebookLivePlayer(url: fbUrl)),
+          Divider(height: 1),
+          Expanded(flex: 2, child: ChatPage()),
         ],
       ),
     );

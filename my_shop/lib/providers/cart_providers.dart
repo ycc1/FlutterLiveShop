@@ -3,6 +3,8 @@ import '../data/models/cart_item.dart';
 import '../data/repositories/cart_repository.dart';
 import '../data/repositories/product_repository.dart';
 import '../data/sources/cart_source.dart';
+import '../features/chat/chat_service.dart';
+import '../features/chat/socketio_chat_service.dart';
 import 'product_providers.dart';
 
 final cartSourceProvider = Provider<CartSource>((ref) => InMemoryCartSource());
@@ -40,4 +42,9 @@ final cartStateProvider = StateNotifierProvider<CartState, List<CartItem>>((ref)
   final st = CartState(cartRepo, productRepo);
   st.refresh();
   return st;
+});
+
+final chatServiceProvider = Provider<ChatService>((ref) {
+  // return SignalRChatService();
+  return SocketIoChatService();
 });

@@ -1,0 +1,11 @@
+// lib/l10n/app_zh.arb
+{
+  "appTitle": "電子商城",
+  "tabStore": "商城",
+  "tabLive": "直播",
+  "tabCart": "購物車",
+  "tabProfile": "我的",
+  "addToCart": "加入購物車",
+  "checkout": "結帳",
+  "total": "合計"
+}
