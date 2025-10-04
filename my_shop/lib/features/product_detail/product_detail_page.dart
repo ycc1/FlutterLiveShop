@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/models/product.dart';
 import '../../providers/product_providers.dart';
 import '../../providers/cart_providers.dart';
 
@@ -10,7 +11,7 @@ class ProductDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.read(productRepoProvider);
-    return FutureBuilder(
+    return FutureBuilder<Product>(
       future: repo.byId(id),
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const Scaffold(body: Center(child: CircularProgressIndicator()));
