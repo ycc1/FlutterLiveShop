@@ -1206,6 +1206,7 @@ flutter run -d chrome
 - 靜態資源：圖片走 CDN；縮略圖 `CachedNetworkImage`
 
 > 若要，我可以把這份骨架**打包為 zip** 或建立 **GitHub 模板倉庫**，並附上最小 Node/ .NET 後端服務（聊天室 + 假支付 + 商品 API），讓 App 直接連上去測試。
+
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -1250,19 +1251,22 @@ dependencies:
   webview_flutter_android: ^3.16.1
   webview_flutter_wkwebview: ^3.13.1
   webview_flutter_web: ^0.2.2+5 # 讓 web 也能以同介面工作
+  pointer_interceptor: ^0.9.3 # 讓 Web 上的浮層可蓋住 iframe 並接收點擊
 ```
-> 已使用條件匯入：Web 端走 `HtmlElementView`（iframe），Android/iOS/Windows/macOS 走 `webview_flutter`。
 
-### 2) 新增：`lib/features/live/widgets/facebook_live_player.dart`（條件匯入門面）
+### 2) 門面檔：`lib/features/live/widgets/facebook_live_player.dart`
 ```dart
 export 'facebook_live_player_io.dart'
   if (dart.library.html) 'facebook_live_player_web.dart';
 ```
 
-### 3) 新增：`lib/features/live/widgets/facebook_live_player_io.dart`（Android/iOS/Windows/macOS 使用 WebView）
+### 3) （Android/iOS/Windows/macOS）`lib/features/live/widgets/facebook_live_player_io.dart`
 ```dart
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:flutter/foundation.dart';
+// Android 最佳化（Hybrid Composition）
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 class FacebookLivePlayer extends StatefulWidget {
   final String url; // Facebook plugins 形式的完整網址
@@ -1278,26 +1282,50 @@ class _FacebookLivePlayerState extends State<FacebookLivePlayer> {
   @override
   void initState() {
     super.initState();
-    _controller = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(const Color(0x00000000))
-      ..loadRequest(Uri.parse(widget.url));
+
+    // Android：顯式使用 Hybrid Composition，確保 Flutter 浮層可覆蓋 WebView
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final params = const AndroidWebViewControllerCreationParams(
+          // usesHybridComposition: true, // 預設即為 HybridComposition
+      );
+      final androidCtrl = AndroidWebViewController(params)
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setBackgroundColor(const Color(0x00000000))
+        ..loadRequest(Uri.parse(widget.url));
+      _controller = androidCtrl;
+    } else {
+      _controller = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setBackgroundColor(const Color(0x00000000))
+        ..loadRequest(Uri.parse(widget.url));
+    }
   }
 
   @override
-  Widget build(BuildContext context) => AspectRatio(
-        aspectRatio: 476/476, // 可依需求調整
-        child: WebViewWidget(controller: _controller),
-      );
+  Widget build(BuildContext context) {
+    return const Positioned.fill( // 與 LivePage 的背景鋪滿一致
+      child: _FacebookWebView(),
+    );
+  }
+}
+
+class _FacebookWebView extends StatelessWidget {
+  const _FacebookWebView();
+  @override
+  Widget build(BuildContext context) {
+    // 實際渲染交由 LivePage 的 Positioned.fill 控制尺寸
+    return WebViewWidget(controller: (context.findAncestorStateOfType<_FacebookLivePlayerState>()!)._controller);
+  }
 }
 ```
 
-### 4) 新增：`lib/features/live/widgets/facebook_live_player_web.dart`（Flutter Web 使用 iframe）
+### 4) （Flutter Web）`lib/features/live/widgets/facebook_live_player_web.dart`
 ```dart
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'dart:html';
-import 'dart:ui' as ui; // for platformViewRegistry
 import 'package:flutter/material.dart';
+// Flutter 3.13+ 使用 dart:ui_web；較舊版本請用 dart:ui
+import 'dart:ui_web' as ui_web;
 
 class FacebookLivePlayer extends StatelessWidget {
   final String url; // Facebook plugins 形式的完整網址
@@ -1306,9 +1334,9 @@ class FacebookLivePlayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final viewType = 'fb-live-${url.hashCode}';
-    // 註冊 iframe 工廠
-    // ignore: undefined_prefixed_name
-    ui.platformViewRegistry.registerViewFactory(viewType, (int viewId) {
+
+    // 註冊 iframe 工廠，只需註冊一次；重複註冊會覆寫同 key
+    ui_web.platformViewRegistry.registerViewFactory(viewType, (int viewId) {
       final iframe = IFrameElement()
         ..src = url
         ..style.border = '0'
@@ -1317,50 +1345,39 @@ class FacebookLivePlayer extends StatelessWidget {
       return iframe;
     });
 
-    return AspectRatio(
-      aspectRatio: 476/476,
-      child: HtmlElementView(viewType: viewType),
+    return const Positioned.fill(
+      child: _FacebookIFrame(viewType: ''),
     );
   }
 }
-```
 
-### 5) 修改：`lib/features/live/live_page.dart` 使用新的 Facebook 播放器
-```dart
-import 'package:flutter/material.dart';
-import 'widgets/facebook_live_player.dart';
-import '../chat/chat_page.dart';
-
-class LivePage extends StatelessWidget {
-  const LivePage({super.key});
-
-  static const fbUrl = 'https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Fgonelivegaming%2Fvideos%2F659033760590366%2F&show_text=false&width=476&t=0';
-
+class _FacebookIFrame extends StatelessWidget {
+  final String viewType;
+  const _FacebookIFrame({required this.viewType});
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('直播')),
-      body: Column(
-        children: const [
-          Expanded(flex: 3, child: FacebookLivePlayer(url: fbUrl)),
-          Divider(height: 1),
-          Expanded(flex: 2, child: ChatPage()),
-        ],
-      ),
-    );
+    // 由 LivePage 的 Stack/Positioned 控制鋪滿
+    return HtmlElementView(viewType: viewType);
   }
 }
 ```
 
-### 6) Web 端注意事項
-- 若在公司內網或瀏覽器阻擋第三方 cookie，Facebook 插件可能需要允許第三方 Cookie 才能正常顯示互動。
-- 若使用自訂 `web/index.html` 的 CSP，需允許 `https://www.facebook.com`、`https://staticxx.facebook.com` 的 `frame-src`。
+> 若你的 Flutter 版本 <3.13，請把 `import 'dart:ui_web' as ui_web;` 改為 `import 'dart:ui' as ui_web;`，其餘不變。
 
-### 7) Android/iOS 注意事項
-- Android：確保 `android/app/src/main/AndroidManifest.xml` 已具備網路權限：
-```xml
-<uses-permission android:name="android.permission.INTERNET" />
+### 5) LivePage：背景滿版 + 浮動聊天室（已提供最小可用）
+請使用上一節「**背景滿版 + 浮層聊天室**」版本的 `live_page.dart`，其中已用 `Stack + Positioned.fill` 將播放器鋪滿，並用 `DraggableScrollableSheet` 做可拖拽的聊天室。若要更強的可點擊覆蓋，在 Web 端請將浮層外再包一層 `PointerInterceptor`（已示範）。
+
+### 6) 執行
+```bash
+flutter pub get
+flutter run -d chrome   # Web
+# 或
+flutter run -d android  # 行動端
+flutter run -d windows  # 桌面
 ```
-- iOS：如需在 iOS 上播放，`Info.plist` 應確保 ATS 允許 https（預設允許）。
 
-> 完成以上步驟後，`flutter run -d chrome`（Web）或 `flutter run -d windows/android`（桌面/行動）即可以 Facebook 影片作為直播來源。
+### 7) 常見問題
+- 若 Web 浮層無法點擊：確認已在浮層外層包 `PointerInterceptor`。
+- 若 Android 浮層在 WebView 下方：確認採用 `webview_flutter_android` 並使用 Hybrid Composition（本檔已啟用）。
+- Facebook 插件顯示空白：檢查瀏覽器第三方 Cookie 設定、CSP 允許 `facebook.com` 與 `staticxx.facebook.com`。
+
