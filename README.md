@@ -1206,3 +1206,161 @@ flutter run -d chrome
 - 靜態資源：圖片走 CDN；縮略圖 `CachedNetworkImage`
 
 > 若要，我可以把這份骨架**打包為 zip** 或建立 **GitHub 模板倉庫**，並附上最小 Node/ .NET 後端服務（聊天室 + 假支付 + 商品 API），讓 App 直接連上去測試。
+import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+
+class LivePage extends StatefulWidget {
+  const LivePage({Key? key}) : super(key: key);
+
+  @override
+  State<LivePage> createState() => _LivePageState();
+}
+
+class _LivePageState extends State<LivePage> {
+  late final WebViewController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..loadRequest(Uri.parse(
+          'https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Fgonelivegaming%2Fvideos%2F659033760590366%2F&show_text=false&width=476&t=0'));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Facebook 直播')),
+      body: WebViewWidget(controller: _controller),
+    );
+  }
+}
+
+
+---
+## 🔴 更新：直播頁改為 Facebook 影片嵌入（Web/行動/桌面通用）
+> 需求：使用 Facebook 插件網址：
+> `https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Fgonelivegaming%2Fvideos%2F659033760590366%2F&show_text=false&width=476&t=0`
+
+### 1) `pubspec.yaml` 追加（WebView 與各平台實作）
+```yaml
+dependencies:
+  webview_flutter: ^4.7.0
+  webview_flutter_android: ^3.16.1
+  webview_flutter_wkwebview: ^3.13.1
+  webview_flutter_web: ^0.2.2+5 # 讓 web 也能以同介面工作
+```
+> 已使用條件匯入：Web 端走 `HtmlElementView`（iframe），Android/iOS/Windows/macOS 走 `webview_flutter`。
+
+### 2) 新增：`lib/features/live/widgets/facebook_live_player.dart`（條件匯入門面）
+```dart
+export 'facebook_live_player_io.dart'
+  if (dart.library.html) 'facebook_live_player_web.dart';
+```
+
+### 3) 新增：`lib/features/live/widgets/facebook_live_player_io.dart`（Android/iOS/Windows/macOS 使用 WebView）
+```dart
+import 'package:flutter/material.dart';
+import 'package:webview_flutter/webview_flutter.dart';
+
+class FacebookLivePlayer extends StatefulWidget {
+  final String url; // Facebook plugins 形式的完整網址
+  const FacebookLivePlayer({super.key, required this.url});
+
+  @override
+  State<FacebookLivePlayer> createState() => _FacebookLivePlayerState();
+}
+
+class _FacebookLivePlayerState extends State<FacebookLivePlayer> {
+  late final WebViewController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(const Color(0x00000000))
+      ..loadRequest(Uri.parse(widget.url));
+  }
+
+  @override
+  Widget build(BuildContext context) => AspectRatio(
+        aspectRatio: 476/476, // 可依需求調整
+        child: WebViewWidget(controller: _controller),
+      );
+}
+```
+
+### 4) 新增：`lib/features/live/widgets/facebook_live_player_web.dart`（Flutter Web 使用 iframe）
+```dart
+// ignore_for_file: avoid_web_libraries_in_flutter
+import 'dart:html';
+import 'dart:ui' as ui; // for platformViewRegistry
+import 'package:flutter/material.dart';
+
+class FacebookLivePlayer extends StatelessWidget {
+  final String url; // Facebook plugins 形式的完整網址
+  const FacebookLivePlayer({super.key, required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    final viewType = 'fb-live-${url.hashCode}';
+    // 註冊 iframe 工廠
+    // ignore: undefined_prefixed_name
+    ui.platformViewRegistry.registerViewFactory(viewType, (int viewId) {
+      final iframe = IFrameElement()
+        ..src = url
+        ..style.border = '0'
+        ..allow = 'autoplay; encrypted-media; fullscreen; picture-in-picture'
+        ..allowFullscreen = true;
+      return iframe;
+    });
+
+    return AspectRatio(
+      aspectRatio: 476/476,
+      child: HtmlElementView(viewType: viewType),
+    );
+  }
+}
+```
+
+### 5) 修改：`lib/features/live/live_page.dart` 使用新的 Facebook 播放器
+```dart
+import 'package:flutter/material.dart';
+import 'widgets/facebook_live_player.dart';
+import '../chat/chat_page.dart';
+
+class LivePage extends StatelessWidget {
+  const LivePage({super.key});
+
+  static const fbUrl = 'https://www.facebook.com/plugins/video.php?height=476&href=https%3A%2F%2Fwww.facebook.com%2Fgonelivegaming%2Fvideos%2F659033760590366%2F&show_text=false&width=476&t=0';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('直播')),
+      body: Column(
+        children: const [
+          Expanded(flex: 3, child: FacebookLivePlayer(url: fbUrl)),
+          Divider(height: 1),
+          Expanded(flex: 2, child: ChatPage()),
+        ],
+      ),
+    );
+  }
+}
+```
+
+### 6) Web 端注意事項
+- 若在公司內網或瀏覽器阻擋第三方 cookie，Facebook 插件可能需要允許第三方 Cookie 才能正常顯示互動。
+- 若使用自訂 `web/index.html` 的 CSP，需允許 `https://www.facebook.com`、`https://staticxx.facebook.com` 的 `frame-src`。
+
+### 7) Android/iOS 注意事項
+- Android：確保 `android/app/src/main/AndroidManifest.xml` 已具備網路權限：
+```xml
+<uses-permission android:name="android.permission.INTERNET" />
+```
+- iOS：如需在 iOS 上播放，`Info.plist` 應確保 ATS 允許 https（預設允許）。
+
+> 完成以上步驟後，`flutter run -d chrome`（Web）或 `flutter run -d windows/android`（桌面/行動）即可以 Facebook 影片作為直播來源。
