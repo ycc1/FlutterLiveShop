@@ -1381,3 +1381,179 @@ flutter run -d windows  # 桌面
 - 若 Android 浮層在 WebView 下方：確認採用 `webview_flutter_android` 並使用 Hybrid Composition（本檔已啟用）。
 - Facebook 插件顯示空白：檢查瀏覽器第三方 Cookie 設定、CSP 允許 `facebook.com` 與 `staticxx.facebook.com`。
 
+
+
+---
+## ➕ 新增：登入頁（Email/Password）＋ Mock JWT 流程
+> 提供最小可用登入頁與認證服務，可後續替換為你的後端 API（JWT）。
+
+### 1) `lib/services/auth_service.dart`
+```dart
+class AuthResult { final String token; final String userId; AuthResult(this.token, this.userId); }
+
+abstract class AuthService {
+  Future<AuthResult> signIn({required String email, required String password});
+  Future<void> signOut();
+  Future<bool> validate(String token);
+}
+
+class MockAuthService implements AuthService {
+  String? _token;
+  @override
+  Future<AuthResult> signIn({required String email, required String password}) async {
+    // TODO: 改為你的後端 API
+    await Future.delayed(const Duration(milliseconds: 600));
+    if (email.isEmpty || password.isEmpty) throw Exception('Email/Password 不可空');
+    _token = 'mock.jwt.token.${DateTime.now().millisecondsSinceEpoch}';
+    return AuthResult(_token!, 'u1');
+  }
+  @override
+  Future<void> signOut() async { _token = null; }
+  @override
+  Future<bool> validate(String token) async => token == _token && token.isNotEmpty;
+}
+```
+
+### 2) `lib/providers/auth_providers.dart`
+```dart
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/auth_service.dart';
+
+final authServiceProvider = Provider<AuthService>((_) => MockAuthService());
+
+class AuthState { final String? token; final String? userId; final bool loading; final Object? error;
+  const AuthState({this.token, this.userId, this.loading=false, this.error});
+  bool get isSignedIn => token != null;
+  AuthState copyWith({String? token, String? userId, bool? loading, Object? error}) =>
+    AuthState(token: token ?? this.token, userId: userId ?? this.userId, loading: loading ?? this.loading, error: error);
+}
+
+class AuthNotifier extends StateNotifier<AuthState> {
+  final AuthService svc;
+  AuthNotifier(this.svc) : super(const AuthState());
+  Future<void> signIn(String email, String pwd) async {
+    state = state.copyWith(loading: true, error: null);
+    try {
+      final r = await svc.signIn(email: email, password: pwd);
+      state = AuthState(token: r.token, userId: r.userId);
+    } catch (e) {
+      state = AuthState(error: e, loading: false);
+    }
+  }
+  Future<void> signOut() async { await svc.signOut(); state = const AuthState(); }
+}
+
+final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) => AuthNotifier(ref.read(authServiceProvider)));
+```
+
+### 3) `lib/features/auth/login_page.dart`
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/auth_providers.dart';
+
+class LoginPage extends ConsumerStatefulWidget {
+  const LoginPage({super.key});
+  @override
+  ConsumerState<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends ConsumerState<LoginPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _email = TextEditingController();
+  final _pwd = TextEditingController();
+  bool _obscure = true;
+
+  @override
+  void dispose(){ _email.dispose(); _pwd.dispose(); super.dispose(); }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = ref.watch(authProvider);
+    return Scaffold(
+      appBar: AppBar(title: const Text('登入')),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Form(
+              key: _formKey,
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                TextFormField(
+                  controller: _email,
+                  decoration: const InputDecoration(labelText: 'Email', prefixIcon: Icon(Icons.email_outlined)),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (v)=> (v==null||v.isEmpty)?'請輸入 Email':null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _pwd,
+                  decoration: InputDecoration(
+                    labelText: '密碼', prefixIcon: const Icon(Icons.lock_outline),
+                    suffixIcon: IconButton(icon: Icon(_obscure?Icons.visibility:Icons.visibility_off), onPressed: ()=> setState(()=> _obscure = !_obscure)),
+                  ),
+                  obscureText: _obscure,
+                  validator: (v)=> (v==null||v.isEmpty)?'請輸入密碼':null,
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: auth.loading? null : () async {
+                      if(!_formKey.currentState!.validate()) return;
+                      await ref.read(authProvider.notifier).signIn(_email.text.trim(), _pwd.text);
+                      final ok = ref.read(authProvider).isSignedIn;
+                      if(ok && context.mounted){
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('登入成功')));
+                        Navigator.of(context).pop(); // 回上一頁或 pushNamed 到首頁
+                      } else if(context.mounted && auth.error!=null){
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('登入失敗：${auth.error}')));
+                      }
+                    },
+                    child: auth.loading? const SizedBox(height:20,width:20,child:CircularProgressIndicator(strokeWidth:2)) : const Text('登入'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(onPressed: (){}, child: const Text('忘記密碼？')),
+              ]),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+### 4) 路由加入口：`lib/app_router.dart`
+```dart
+// import 'features/auth/login_page.dart'; 置於檔首
+// ...
+GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
+```
+> 在導航列或需要登入的地方：`context.push('/login');`
+
+### 5) 可選：簡易守衛（需要登入才可進入）
+```dart
+// 在 app_router.dart 補充：
+final authGuard = Provider<bool>((ref) => ref.watch(authProvider).isSignedIn);
+// 使用時：
+GoRoute(
+  path: '/orders',
+  builder: (_, __) => const OrdersPage(),
+  redirect: (context, state){
+    final loggedIn = (context as Element).read(authGuard); // 或改為在外層讀取 ref
+    return loggedIn? null : '/login';
+  },
+),
+```
+
+### 6) 替換成你的 JWT 後端
+把 `MockAuthService.signIn` 改為：
+```dart
+final resp = await http.post(Uri.parse('https://api.yourhost.com/auth/login'), body: {'email': email, 'password': password});
+final json = jsonDecode(resp.body);
+return AuthResult(json['token'] as String, json['userId'] as String);
+```
+並將 token 以 `shared_preferences` 或安全儲存保存，啟動時載入。
