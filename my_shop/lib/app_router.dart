@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'features/auth/login_page.dart';
 import 'features/catalog/catalog_page.dart';
 import 'features/product_detail/product_detail_page.dart';
 import 'features/cart/cart_page.dart';
@@ -26,10 +27,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
         branches: [
           StatefulShellBranch(routes: [
-            GoRoute(path: '/', builder: (context, state) => const CatalogPage())
+            GoRoute(path: '/', builder: (context, state) => const CatalogPage()),
           ]),
           StatefulShellBranch(routes: [
-            GoRoute(path: '/live', builder: (context, state) => const LivePage())
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: '/cart', builder: (context, state) => const CartPage())
