@@ -6,4 +6,7 @@ class UserRepository {
   UserRepository(this.source);
   Future<UserProfile> me() => source.me();
   Future<UserProfile> addPoints(int delta) => source.updatePoints(delta);
+  Future<UserProfile> addBalance(double delta) => source.addBalance(delta);
+  Future<UserProfile> deductBalance(double delta) =>
+      source.deductBalance(delta);
 }

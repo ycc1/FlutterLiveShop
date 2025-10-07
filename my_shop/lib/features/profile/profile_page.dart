@@ -14,7 +14,7 @@ class ProfilePage extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           children: [
             ListTile(
-              leading: CircleAvatar(backgroundImage: NetworkImage(me.avatar), radius: 28),
+              leading: CircleAvatar(backgroundImage: NetworkImage(me.vipLevel), radius: 28),
               title: Text(me.name), subtitle: Text(me.email),
             ),
             const Divider(),

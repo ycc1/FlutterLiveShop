@@ -3,30 +3,38 @@ import '../models/user_profile.dart';
 abstract class UserSource {
   Future<UserProfile> me();
   Future<UserProfile> updatePoints(int delta);
+  Future<UserProfile> addBalance(double delta);
+  Future<UserProfile> deductBalance(double delta);
 }
 
 class DummyUserSource implements UserSource {
-  UserProfile _me = const UserProfile(
-    id: 'u1',
-    name: 'Alice',
-    email: 'alice@example.com',
-    avatar: 'https://i.pravatar.cc/150?img=32',
-    points: 0,
-    vipLevel: 'Bronze',
-  );
+  UserProfile _me = UserProfile.mock();
+
   @override
   Future<UserProfile> me() async => _me;
+
   @override
   Future<UserProfile> updatePoints(int delta) async {
-    final total = (_me.points + delta).clamp(0, 1 << 31);
+    final total = (_me.points + delta).clamp(0, 1 << 30);
     final vip = _tier(total);
-    _me = UserProfile(
-        id: _me.id,
-        name: _me.name,
-        email: _me.email,
-        avatar: _me.avatar,
-        points: total,
-        vipLevel: vip);
+    _me = _me.copyWith(points: total, vipLevel: vip);
+    return _me;
+  }
+
+  @override
+  Future<UserProfile> addBalance(double delta) async {
+    final newBalance = (_me.balance + delta).clamp(0, 1e12);
+    _me = _me.copyWith(balance: newBalance.toDouble());
+    return _me;
+  }
+
+  @override
+  Future<UserProfile> deductBalance(double delta) async {
+    final newBalance = (_me.balance - delta);
+    if (newBalance < -1e-6) {
+      throw Exception('余额不足');
+    }
+    _me = _me.copyWith(balance: newBalance);
     return _me;
   }
 

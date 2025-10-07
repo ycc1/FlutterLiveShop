@@ -8,6 +8,7 @@ import 'features/product_detail/product_detail_page.dart';
 import 'features/cart/cart_page.dart';
 import 'features/profile/profile_page.dart';
 import 'features/live/live_page.dart';
+import 'features/recharge/recharge_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -40,7 +41,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
-                path: '/login', builder: (context, state) => const LoginPage())
+                path: '/deposit',
+                builder: (context, state) => const RechargePage())
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
@@ -55,6 +57,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             GoRoute(
                 path: '/checkout',
                 builder: (context, state) => const CheckoutPage())
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+                path: '/deposit',
+                builder: (context, state) => const RechargePage())
           ]),
         ],
       ),
