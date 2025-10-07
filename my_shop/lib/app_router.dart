@@ -60,9 +60,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ]),
           StatefulShellBranch(routes: [
             GoRoute(
-                path: '/deposit',
-                builder: (context, state) => const RechargePage())
-          ]),
+                path: '/login', builder: (context, state) => const LoginPage())
+          ])
         ],
       ),
       GoRoute(
