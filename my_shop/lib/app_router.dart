@@ -17,39 +17,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             selectedIndex: navigationShell.currentIndex,
             onDestinationSelected: navigationShell.goBranch,
             destinations: const [
-              NavigationDestination(
-                  icon: Icon(Icons.storefront_outlined), label: '商城'),
-              NavigationDestination(
-                  icon: Icon(Icons.live_tv_outlined), label: '直播'),
-              NavigationDestination(
-                  icon: Icon(Icons.shopping_cart_outlined), label: '購物車'),
-              NavigationDestination(
-                  icon: Icon(Icons.person_outline), label: '我的'),
+              NavigationDestination(icon: Icon(Icons.storefront_outlined), label: '商城'),
+              NavigationDestination(icon: Icon(Icons.live_tv_outlined), label: '直播'),
+              NavigationDestination(icon: Icon(Icons.shopping_cart_outlined), label: '購物車'),
+              NavigationDestination(icon: Icon(Icons.person_outline), label: '我的'),
             ],
           ),
         ),
         branches: [
           StatefulShellBranch(routes: [
-            GoRoute(
-                path: '/', builder: (context, state) => const CatalogPage()),
-          ]),
-          StatefulShellBranch(routes: []),
-          StatefulShellBranch(routes: [
-            GoRoute(
-                path: '/cart', builder: (context, state) => const CartPage())
+            GoRoute(path: '/', builder: (context, state) => const CatalogPage())
           ]),
           StatefulShellBranch(routes: [
-            GoRoute(
-                path: '/profile',
-                builder: (context, state) => const ProfilePage())
+            GoRoute(path: '/live', builder: (context, state) => const LivePage())
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/cart', builder: (context, state) => const CartPage())
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: '/profile', builder: (context, state) => const ProfilePage())
           ]),
         ],
       ),
       GoRoute(
         path: '/product/:id',
         name: 'product_detail',
-        builder: (context, state) =>
-            ProductDetailPage(id: state.pathParameters['id']!),
+        builder: (context, state) => ProductDetailPage(id: state.pathParameters['id']!),
       ),
     ],
   );
