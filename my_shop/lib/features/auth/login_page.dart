@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../providers/auth_providers.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -71,6 +72,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             if (ok && context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(content: Text('登入成功')));
+                              context.go('/'); // ✅ 直接回首页（/shop 用 /shop）
                               Navigator.of(context).pop();
                             } else if (context.mounted && auth.error != null) {
                               ScaffoldMessenger.of(context).showSnackBar(
