@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/cart_providers.dart';
+import 'package:go_router/go_router.dart';
 
 class CartPage extends ConsumerWidget {
   const CartPage({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(cartStateProvider);
+    final total = ref.read(cartStateProvider.notifier).total;
     return Scaffold(
       appBar: AppBar(title: const Text('購物車')),
       body: items.isEmpty
@@ -25,12 +27,14 @@ class CartPage extends ConsumerWidget {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Expanded(child: Text('合計：\$${ref.read(cartStateProvider.notifier).total.toStringAsFixed(2)}', style: Theme.of(context).textTheme.titleLarge)),
-              FilledButton(onPressed: () {}, child: const Text('結帳')),
-            ],
-          ),
+          child: Row(children: [
+            Expanded(
+                child: Text('合計：\$${total.toStringAsFixed(2)}',
+                    style: Theme.of(context).textTheme.titleLarge)),
+            FilledButton(
+                onPressed: () => context.push('/checkout'),
+                child: const Text('結帳')),
+          ]),
         ),
       ),
     );

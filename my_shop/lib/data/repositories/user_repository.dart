@@ -5,4 +5,5 @@ class UserRepository {
   final UserSource source;
   UserRepository(this.source);
   Future<UserProfile> me() => source.me();
+  Future<UserProfile> addPoints(int delta) => source.updatePoints(delta);
 }

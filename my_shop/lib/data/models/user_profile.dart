@@ -3,5 +3,14 @@ class UserProfile {
   final String name;
   final String email;
   final String avatar;
-  const UserProfile({required this.id, required this.name, required this.email, required this.avatar});
+  final int points; // 累计积分
+  final String vipLevel; // Bronze / Silver / Gold / Platinum
+  const UserProfile({
+    required this.id,
+    required this.name,
+    required this.email,
+    required this.avatar,
+    this.points = 0,
+    this.vipLevel = 'Bronze',
+  });
 }
