@@ -13,6 +13,7 @@
         "flutter_localizations",
         "flutter_riverpod",
         "go_router",
+        "http",
         "intl",
         "signalr_netcore",
         "socket_io_client",
@@ -31,6 +32,16 @@
       "version": "4.0.0",
       "dependencies": [
         "lints"
+      ]
+    },
+    {
+      "name": "http",
+      "version": "1.5.0",
+      "dependencies": [
+        "async",
+        "http_parser",
+        "meta",
+        "web"
       ]
     },
     {
@@ -185,6 +196,34 @@
       "dependencies": []
     },
     {
+      "name": "web",
+      "version": "1.1.1",
+      "dependencies": []
+    },
+    {
+      "name": "meta",
+      "version": "1.16.0",
+      "dependencies": []
+    },
+    {
+      "name": "http_parser",
+      "version": "4.1.2",
+      "dependencies": [
+        "collection",
+        "source_span",
+        "string_scanner",
+        "typed_data"
+      ]
+    },
+    {
+      "name": "async",
+      "version": "2.13.0",
+      "dependencies": [
+        "collection",
+        "meta"
+      ]
+    },
+    {
       "name": "webview_flutter_platform_interface",
       "version": "2.14.0",
       "dependencies": [
@@ -192,11 +231,6 @@
         "meta",
         "plugin_platform_interface"
       ]
-    },
-    {
-      "name": "web",
-      "version": "1.1.1",
-      "dependencies": []
     },
     {
       "name": "flutter_web_plugins",
@@ -208,11 +242,6 @@
     {
       "name": "path",
       "version": "1.9.1",
-      "dependencies": []
-    },
-    {
-      "name": "meta",
-      "version": "1.16.0",
       "dependencies": []
     },
     {
@@ -381,16 +410,6 @@
       "dependencies": []
     },
     {
-      "name": "http",
-      "version": "1.5.0",
-      "dependencies": [
-        "async",
-        "http_parser",
-        "meta",
-        "web"
-      ]
-    },
-    {
       "name": "message_pack_dart",
       "version": "2.0.1",
       "dependencies": []
@@ -435,6 +454,29 @@
       "version": "2.0.3",
       "dependencies": [
         "logging"
+      ]
+    },
+    {
+      "name": "typed_data",
+      "version": "1.4.0",
+      "dependencies": [
+        "collection"
+      ]
+    },
+    {
+      "name": "string_scanner",
+      "version": "1.4.1",
+      "dependencies": [
+        "source_span"
+      ]
+    },
+    {
+      "name": "source_span",
+      "version": "1.10.1",
+      "dependencies": [
+        "collection",
+        "path",
+        "term_glyph"
       ]
     },
     {
@@ -491,15 +533,6 @@
       "version": "1.0.0",
       "dependencies": [
         "flutter"
-      ]
-    },
-    {
-      "name": "source_span",
-      "version": "1.10.1",
-      "dependencies": [
-        "collection",
-        "path",
-        "term_glyph"
       ]
     },
     {
@@ -564,24 +597,6 @@
       ]
     },
     {
-      "name": "http_parser",
-      "version": "4.1.2",
-      "dependencies": [
-        "collection",
-        "source_span",
-        "string_scanner",
-        "typed_data"
-      ]
-    },
-    {
-      "name": "async",
-      "version": "2.13.0",
-      "dependencies": [
-        "collection",
-        "meta"
-      ]
-    },
-    {
       "name": "stream_channel",
       "version": "2.1.4",
       "dependencies": [
@@ -624,6 +639,11 @@
       ]
     },
     {
+      "name": "term_glyph",
+      "version": "1.2.2",
+      "dependencies": []
+    },
+    {
       "name": "package_info_plus_platform_interface",
       "version": "3.2.1",
       "dependencies": [
@@ -649,11 +669,6 @@
     {
       "name": "args",
       "version": "2.7.0",
-      "dependencies": []
-    },
-    {
-      "name": "term_glyph",
-      "version": "1.2.2",
       "dependencies": []
     },
     {
@@ -751,20 +766,6 @@
       "dependencies": [
         "flutter",
         "path_provider_platform_interface"
-      ]
-    },
-    {
-      "name": "typed_data",
-      "version": "1.4.0",
-      "dependencies": [
-        "collection"
-      ]
-    },
-    {
-      "name": "string_scanner",
-      "version": "1.4.1",
-      "dependencies": [
-        "source_span"
       ]
     },
     {

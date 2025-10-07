@@ -30,6 +30,8 @@ dependencies:
   webview_flutter_wkwebview: ^3.13.1
   webview_flutter_web: ^0.2.2+5 # 讓 web 也能以同介面工作
   # 如需 WebRTC 直播可改採 livekit_client / flutter_webrtc
+  # HTTP client for backend API (use 1.x to be compatible with signalr_netcore)
+  http: ^1.5.0
 
 dev_dependencies:
   flutter_lints: ^4.0.0
