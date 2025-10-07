@@ -44,6 +44,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   path: '/deposit', builder: (_, __) => const RechargePage()),
             ],
           ),
+          // 小游戏
+          StatefulShellBranch(
+            initialLocation: '/game',
+            routes: [
+              GoRoute(path: '/game', builder: (_, __) => const RechargePage()),
+            ],
+          ),
           // 我的
           StatefulShellBranch(
             initialLocation: '/profile',
@@ -72,6 +79,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                     icon: Icon(Icons.live_tv_outlined), label: '直播'),
                 NavigationDestination(
                     icon: Icon(Icons.monetization_on), label: '充值'),
+                NavigationDestination(icon: Icon(Icons.games), label: '小游戏'),
                 NavigationDestination(
                     icon: Icon(Icons.person_outline), label: '我的'),
               ],

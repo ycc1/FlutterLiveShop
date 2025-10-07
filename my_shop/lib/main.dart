@@ -16,6 +16,7 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
     return MaterialApp.router(
+      debugShowCheckedModeBanner: false, // ✅ 關掉右上角的 DEBUG 紅條
       title: 'FPLiveShop',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
@@ -36,7 +37,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('多語系商城首頁')),
-      body: const Center(child: Text('Hello Flutter E-Shop!')),
+      body: const Center(child: Text('Hello Flutter FPLiveShop!')),
     );
   }
 }
