@@ -66,12 +66,12 @@ class UserProfile {
   }) {
     return UserProfile(
       id: id ?? this.id,
-      userName: name ?? this.userName,
+      userName: name ?? userName,
       nickName: nickName ?? this.nickName,
       email: email ?? this.email,
       mobile: mobile ?? this.mobile,
       sex: sex ?? this.sex,
-      birthday: this.birthday,
+      birthday: birthday,
       avatarImage: avatarImage ?? this.avatarImage,
       parentUserName: parentUserName ?? this.parentUserName,
       points: points ?? this.points,

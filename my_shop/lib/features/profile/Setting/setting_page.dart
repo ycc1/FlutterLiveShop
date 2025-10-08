@@ -13,10 +13,10 @@ class SettingPage extends ConsumerWidget {
       body: meAsync.when(
         data: (me) => ListView(
           padding: const EdgeInsets.all(16),
-          children: [
-            const ListTile(leading: Icon(Icons.location_on_outlined), title: Text('Profile')),
-            const ListTile(leading: Icon(Icons.location_on_outlined), title: Text('Password')),
-            const ListTile(leading: Icon(Icons.receipt_long_outlined), title: Text('Address management')),
+          children: const [
+            ListTile(leading: Icon(Icons.location_on_outlined), title: Text('Profile')),
+            ListTile(leading: Icon(Icons.location_on_outlined), title: Text('Password')),
+            ListTile(leading: Icon(Icons.receipt_long_outlined), title: Text('Address management')),
           ],
         ),
         loading: () => const Center(child: CircularProgressIndicator()),

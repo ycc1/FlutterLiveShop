@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/user_providers.dart';
 
 class ProfilePage extends ConsumerWidget {
-  const ProfilePage({super.key});
+  const ProfilePage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -16,7 +16,21 @@ class ProfilePage extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           children: [
             ListTile(
-              leading: CircleAvatar(backgroundImage: NetworkImage(me.vipLevel), radius: 28),
+              leading: me.avatarImage != null && me.avatarImage.isNotEmpty
+                  ? CircleAvatar(
+                      backgroundImage: NetworkImage(me.avatarImage), radius: 28)
+                  : CircleAvatar(
+                      radius: 28,
+                      child: Text(
+                        (me.nickName?.isNotEmpty == true
+                                ? me.nickName!.substring(0, 1)
+                                : (me.userName.isNotEmpty
+                                    ? me.userName.substring(0, 1)
+                                    : '?'))
+                            .toUpperCase(),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
               // ✅ 昵称与 VIP 同行，VIP 可点击跳转
               title: Row(
                 children: [
@@ -38,7 +52,8 @@ class ProfilePage extends ConsumerWidget {
                     // },
                     borderRadius: BorderRadius.circular(6),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.amber[100],
                         borderRadius: BorderRadius.circular(6),
@@ -46,10 +61,9 @@ class ProfilePage extends ConsumerWidget {
                       ),
                       child: Text(
                         'VIP ${me.vipLevel}',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelLarge
-                            ?.copyWith(color: Colors.amber[900], fontWeight: FontWeight.bold),
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            color: Colors.amber[900],
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -58,13 +72,16 @@ class ProfilePage extends ConsumerWidget {
               subtitle: Text(me.email),
             ),
             const Divider(),
-            const ListTile(leading: Icon(Icons.location_on_outlined), title: Text('地址管理')),
-            const ListTile(leading: Icon(Icons.receipt_long_outlined), title: Text('訂單記錄')),
+            const ListTile(
+                leading: Icon(Icons.location_on_outlined), title: Text('地址管理')),
+            const ListTile(
+                leading: Icon(Icons.receipt_long_outlined),
+                title: Text('訂單記錄')),
             ListTile(
               leading: const Icon(Icons.settings_outlined),
               title: const Text('設定'),
               onTap: () => context.push('/settings'),
-              ),
+            ),
           ],
         ),
         loading: () => const Center(child: CircularProgressIndicator()),
