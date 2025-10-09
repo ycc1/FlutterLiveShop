@@ -1,6 +1,13 @@
-// Intentionally a no-op to avoid hard dependency on Android webview internals at compile time.
-// If you need hybrid composition on Android, configure it manually in a file that imports
-// webview_flutter_android inside an Android-only compilation unit.
+import 'dart:io';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
+import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
+
 void setupWebViewPlatform() {
-  // no-op
+  try {
+    if (Platform.isAndroid) {
+      WebViewPlatform.instance = SurfaceAndroidWebView();
+    }
+  } catch (e) {
+    // ignore on platforms where packages are unavailable
+  }
 }

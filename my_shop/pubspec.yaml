@@ -35,6 +35,7 @@ dependencies:
   # 如需 WebRTC 直播可改採 livekit_client / flutter_webrtc
   # HTTP client for backend API (use 1.x to be compatible with signalr_netcore)
   http: ^1.5.0
+  dio: ^5.9.0
 
 dev_dependencies:
   flutter_lints: ^4.0.0
