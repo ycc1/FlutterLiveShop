@@ -2,14 +2,14 @@ class Product {
   final String id;
   final String title;
   final String description;
-  final String imageUrl;
+  final String image;
   final double price;
   final List<String> gallery;
   const Product({
     required this.id,
     required this.title,
     required this.description,
-    required this.imageUrl,
+    required this.image,
     required this.price,
     this.gallery = const [],
   });
@@ -49,7 +49,7 @@ class Product {
             '')
         .toString();
 
-    String pickCover() => (json['imageUrl'] ??
+    String pickCover() => (json['image'] ??
             json['img'] ??
             json['cover'] ??
             json['thumbnail'] ??
@@ -72,7 +72,7 @@ class Product {
       title: pickTitle(),
       price: pickPrice(),
       description: pickDesc(),
-      imageUrl: pickCover(),
+      image: pickCover(),
       gallery: pickGallery(),
     );
   }

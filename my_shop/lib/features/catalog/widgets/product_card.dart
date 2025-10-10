@@ -14,7 +14,7 @@ class ProductCard extends StatelessWidget {
       child: InkWell(onTap: onTap, child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(child: CachedNetworkImage(imageUrl: product.imageUrl, fit: BoxFit.cover)),
+          Expanded(child: CachedNetworkImage(imageUrl: product.image, fit: BoxFit.cover)),
           Padding(padding: const EdgeInsets.all(12), child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

@@ -1,32 +1,23 @@
 import 'dart:convert';
 import '../models/product.dart';
-import '../sources/product_source.dart';
 import '../network/api_client.dart';
 
-/*
-class ProductRepository {
-  final ProductSource source;
-  ProductRepository(this.source);
-  Future<List<Product>> list({String? keyword}) =>
-      source.fetchProducts(keyword: keyword);
-  Future<Product> byId(String id) => source.fetchById(id);
-}
-*/
 class PagedResult<T> {
   final List<T> items;
   final int total;
   final int page;
   final int pageSize;
   final int limit;
-  PagedResult(this.items, this.total, this.page, this.pageSize, this.limit);
+  PagedResult(this.items, this.total, this.page, this.pageSize,
+      {this.limit = 100});
 }
 
 abstract class ProductRepository {
   Future<PagedResult<Product>> list({
-    int page,
-    int pageSize,
-    int limit,
+    int page = 1,
+    int pageSize = 20,
     String? keyword,
+    int limit,
   });
 
   Future<Product> byId(String id);
@@ -36,6 +27,8 @@ class ProductRepositoryImpl implements ProductRepository {
   final ApiClient api;
   ProductRepositoryImpl(this.api);
 
+  /// 依 .NET 常见分页约定：page / pageSize / keyword（按你后端为准）
+  /// 你的接口：/api/Agent/GetGoodsPageList
   @override
   Future<PagedResult<Product>> list({
     int page = 1,
@@ -43,7 +36,6 @@ class ProductRepositoryImpl implements ProductRepository {
     int limit = 100,
     String? keyword,
   }) async {
-    // ✅ 改为 POST 请求
     final res = await api.post<String>(
       '/api/Agent/GetGoodsPageList',
       data: {
@@ -54,17 +46,18 @@ class ProductRepositoryImpl implements ProductRepository {
       },
     );
 
+    // 假设返回结构可能是：
+    // { "code": 0, "data": { "items": [...], "total": 123 } }
+    // 或者直接是数组： [ ... ]
     final body = res.data;
     if (body == null) {
-      return PagedResult<Product>(const [], 0, page, pageSize, limit);
+      return PagedResult<Product>(const [], 0, page, pageSize);
     }
-
     final dynamic json = jsonDecode(body);
 
     List listData;
     int total = 0;
 
-    // ✅ 兼容不同的 .NET 返回格式
     if (json is Map) {
       final data = json['data'] ?? json['Data'] ?? json;
       listData =
@@ -80,17 +73,18 @@ class ProductRepositoryImpl implements ProductRepository {
     final items = listData
         .map((e) => Product.fromJson(Map<String, dynamic>.from(e)))
         .toList();
-    return PagedResult<Product>(items, total, page, pageSize, limit);
+    return PagedResult<Product>(items, total, page, pageSize);
   }
 
+  /// 若后端没有单独的详情接口，这里先用列表里查找/或改为请求 /GetGoodsDetail?id=...
   @override
   Future<Product> byId(String id) async {
-    // ✅ 如果后端有详情接口，改成：
-    // final res = await api.post<String>('/api/Agent/GetGoodsDetail', data: {'id': id});
+    // 如果后端已提供详情接口，改成：
+    // final res = await api.get<String>('/api/Agent/GetGoodsDetail', query: {'id': id});
     // final json = jsonDecode(res.data!);
     // return Product.fromJson(json['data'] ?? json);
 
-    // 没有详情接口则从列表模拟取一笔
+    // 没有详情接口就退而求其次：在第一页里找（或加大 pageSize）
     final page = await list(page: 1, pageSize: 100);
     final found = page.items.firstWhere(
       (p) => p.id == id,

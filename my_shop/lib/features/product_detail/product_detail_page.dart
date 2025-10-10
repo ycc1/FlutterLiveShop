@@ -23,7 +23,7 @@ class ProductDetailPage extends ConsumerWidget {
             children: [
               AspectRatio(
                 aspectRatio: 4/3,
-                child: CachedNetworkImage(imageUrl: p.imageUrl, fit: BoxFit.cover),
+                child: CachedNetworkImage(imageUrl: p.image, fit: BoxFit.cover),
               ),
               const SizedBox(height: 12),
               Text(p.title, style: Theme.of(context).textTheme.headlineSmall),

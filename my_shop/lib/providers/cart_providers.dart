@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/models/cart_item.dart';
 import '../data/repositories/cart_repository.dart';
+import '../data/repositories/product_localhost_repository.dart';
 import '../data/repositories/product_repository.dart';
 import '../data/sources/cart_source.dart';
 import '../features/chat/chat_service.dart';
@@ -8,7 +9,8 @@ import '../features/chat/socketio_chat_service.dart';
 import 'product_providers.dart';
 
 final cartSourceProvider = Provider<CartSource>((ref) => InMemoryCartSource());
-final cartRepoProvider = Provider<CartRepository>((ref) => CartRepository(ref.read(cartSourceProvider)));
+final cartRepoProvider = Provider<CartRepository>(
+    (ref) => CartRepository(ref.read(cartSourceProvider)));
 
 class CartState extends StateNotifier<List<CartItem>> {
   final CartRepository repo;
@@ -31,12 +33,21 @@ class CartState extends StateNotifier<List<CartItem>> {
     await refresh();
   }
 
-  Future<void> remove(String id) async { await repo.remove(id); await refresh(); }
-  Future<void> clear() async { await repo.clear(); await refresh(); }
+  Future<void> remove(String id) async {
+    await repo.remove(id);
+    await refresh();
+  }
+
+  Future<void> clear() async {
+    await repo.clear();
+    await refresh();
+  }
+
   double get total => state.fold(0, (sum, it) => sum + it.subtotal);
 }
 
-final cartStateProvider = StateNotifierProvider<CartState, List<CartItem>>((ref) {
+final cartStateProvider =
+    StateNotifierProvider<CartState, List<CartItem>>((ref) {
   final cartRepo = ref.read(cartRepoProvider);
   final productRepo = ref.read(Provider((_) => ref.read(productRepoProvider)));
   final st = CartState(cartRepo, productRepo);

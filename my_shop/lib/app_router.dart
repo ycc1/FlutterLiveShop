@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'features/auth/login_page.dart';
 import 'features/catalog/catalog_page.dart';
 import 'features/checkout/checkout_page.dart';
+import 'features/minigame/game_main_page.dart';
+import 'features/minigame/myGame/bomb/bomb_defuse_page.dart';
+import 'features/minigame/myGame/maze/maze_game_page.dart';
 import 'features/product_detail/product_detail_page.dart';
 import 'features/cart/cart_page.dart';
 import 'features/profile/Setting/setting_page.dart';
@@ -50,7 +53,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           StatefulShellBranch(
             initialLocation: '/game',
             routes: [
-              GoRoute(path: '/game', builder: (_, __) => const RechargePage()),
+              GoRoute(path: '/game', builder: (_, __) => const GameMainPage()),
             ],
           ),
           // 我的
@@ -110,6 +113,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/vip',
         builder: (_, __) => const VipPage(),
+      ),
+      GoRoute(
+        path: '/minigame/maze',
+        builder: (_, __) => const MazeGamePage(),
+      ),
+      GoRoute(
+        path: '/minigame/bomb',
+        builder: (_, __) => const BombDefusePage(),
       ),
       GoRoute(
         path: '/product/:id',

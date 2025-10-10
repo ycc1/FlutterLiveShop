@@ -1,13 +1,13 @@
 import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'dart:io' show Platform;
+import '../../config/app_config.dart';
 
 class ApiClient {
   final Dio _dio;
 
   ApiClient({
-    String baseUrl = 'http://localhost:2015',
+    String baseUrl = AppConfig.apiBaseUrl, // ← 改这里即可切环境
     Dio? dio,
   }) : _dio = dio ??
             Dio(BaseOptions(
@@ -16,45 +16,22 @@ class ApiClient {
               receiveTimeout: const Duration(seconds: 20),
               headers: {
                 'Content-Type': 'application/json',
-                'X-Platform': 'flutter'
+                'Host': AppConfig.apiBaseUrl,
+                'Content-Length': '4000', // 初始值，后续会覆盖
+                'X-Platform': 'flutter' // ← 可自定义平台标识
               },
             )) {
-    // ✅ 在构造时添加拦截器：自动加入动态 Header
-    _dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          // 这里可动态添加 headers
-          options.headers['X-App-Version'] = '1.0.0';
-
-          // 如果你有 JWT Token：
-          final token = await _getToken();
-          if (token != null && token.isNotEmpty) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
-          if (!Platform.isWindows && !Platform.isMacOS) {
-            options.headers.addAll({
-              'Host': 'localhost:2015',
-            });
-
-            // Content-Length 必须是准确值，否则 HttpClient 会覆盖
-            final data = options.data;
-            if (data is String) {
-              options.headers['Content-Length'] = data.length.toString();
-            } else if (data is Map) {
-              final jsonStr = jsonEncode(data);
-              options.headers['Content-Length'] =
-                  utf8.encode(jsonStr).length.toString();
-            }
-          }
-
-          return handler.next(options);
-        },
-        onError: (e, handler) {
-          // 统一错误处理也可在这
-          return handler.next(e);
-        },
-      ),
-    );
+    // ✅ 打印所有请求/响应
+    /*
+    _dio.interceptors.add(LogInterceptor(
+      request: true,
+      requestHeader: true,
+      requestBody: true,
+      responseHeader: true,
+      responseBody: true,
+      error: true,
+    ));
+    */
   }
 
   // 假设未来要从本地 SecureStorage 获取 token

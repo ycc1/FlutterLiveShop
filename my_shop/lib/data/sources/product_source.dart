@@ -12,7 +12,7 @@ class InMemoryProductSource implements ProductSource {
             id: 'p$i',
             title: '綠茶拿鐵 #$i',
             description: '嚴選茶葉與牛奶調和，風味清爽。',
-            imageUrl: 'https://picsum.photos/seed/tea$i/600/400',
+            image: 'https://picsum.photos/seed/tea$i/600/400',
             price: 2.5 + i,
             gallery: List.generate(
                 3, (g) => 'https://picsum.photos/seed/tea${i}g$g/800/600'),

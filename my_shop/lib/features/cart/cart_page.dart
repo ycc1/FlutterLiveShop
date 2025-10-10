@@ -18,7 +18,7 @@ class CartPage extends ConsumerWidget {
               itemCount: items.length,
               separatorBuilder: (_, __) => const Divider(),
               itemBuilder: (_, i) => ListTile(
-                leading: CircleAvatar(backgroundImage: NetworkImage(items[i].product.imageUrl)),
+                leading: CircleAvatar(backgroundImage: NetworkImage(items[i].product.image)),
                 title: Text(items[i].product.title),
                 subtitle: Text('x${items[i].qty}'),
                 trailing: Text('\$${items[i].subtotal.toStringAsFixed(2)}'),

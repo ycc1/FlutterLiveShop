@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../config/app_config.dart';
 import '../data/repositories/product_repository.dart';
 import '../data/sources/product_source.dart';
 import '../data/network/api_client.dart';
@@ -37,11 +38,11 @@ class ProductQuery {
   }
 
   @override
-  int get hashCode => Object.hash(page, pageSize, keyword);
+  int get hashCode => Object.hash(page, pageSize, keyword, limit);
 }
 
 final apiClientProvider = Provider<ApiClient>((ref) {
-  return ApiClient(baseUrl: 'http://localhost:2015'); // ← 改成你的 API Host
+  return ApiClient(baseUrl: AppConfig.apiBaseUrl); // ← 改成你的 API Host
 });
 
 final productRepoProvider = Provider<ProductRepository>((ref) {
