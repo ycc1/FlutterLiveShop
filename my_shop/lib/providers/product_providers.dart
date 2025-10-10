@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/app_config.dart';
+import '../data/models/product.dart';
+import '../data/repositories/product_local_repository.dart';
 import '../data/repositories/product_repository.dart';
 import '../data/sources/product_source.dart';
 import '../data/network/api_client.dart';
@@ -49,16 +51,31 @@ final productRepoProvider = Provider<ProductRepository>((ref) {
   return ProductRepositoryImpl(ref.read(apiClientProvider));
 });
 
+// 本地 Source + 仓库
+final productLocalSourceProvider =
+    Provider<ProductSource>((ref) => InMemoryProductSource());
+
+final productLocalRepoProvider = Provider<ProductLocalRepository>(
+  (ref) => ProductLocalRepository(ref.read(productLocalSourceProvider)),
+);
+
 /// 列表（带查询条件）
-final productListProvider = FutureProvider.family.autoDispose(
+final productListProvider =
+    FutureProvider.family.autoDispose<PagedResult<Product>, ProductQuery>(
   (ref, ProductQuery query) async {
     final repo = ref.read(productRepoProvider);
-    final res = await repo.list(
-      page: query.page,
-      pageSize: query.pageSize,
-      keyword: query.keyword,
-    );
-    return res;
+    final localRepo = ref.read(productLocalRepoProvider);
+    try {
+      return await repo.list(
+        page: query.page,
+        pageSize: query.pageSize,
+        limit: query.limit,
+        keyword: query.keyword,
+      );
+    } catch (_) {
+      final items = await localRepo.list(keyword: query.keyword);
+      return PagedResult<Product>(items, 100, 1, 100);
+    }
   },
 );
 

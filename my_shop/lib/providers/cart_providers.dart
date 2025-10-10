@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/models/cart_item.dart';
 import '../data/repositories/cart_repository.dart';
-import '../data/repositories/product_localhost_repository.dart';
 import '../data/repositories/product_repository.dart';
 import '../data/sources/cart_source.dart';
 import '../features/chat/chat_service.dart';

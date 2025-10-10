@@ -3,9 +3,9 @@ import '../models/product.dart';
 import '../sources/product_source.dart';
 import '../network/api_client.dart';
 
-class ProductRepository_V1 {
+class ProductLocalRepository {
   final ProductSource source;
-  ProductRepository_V1(this.source);
+  ProductLocalRepository(this.source);
   Future<List<Product>> list({String? keyword}) =>
       source.fetchProducts(keyword: keyword);
   Future<Product> byId(String id) => source.fetchById(id);

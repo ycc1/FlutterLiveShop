@@ -15,7 +15,7 @@ class _CatalogPageState extends ConsumerState<CatalogPage> {
   String keyword = '';
   @override
   Widget build(BuildContext context) {
-    const ProductQuery query = ProductQuery(page: 1, pageSize: 20);
+    const ProductQuery query = ProductQuery(page: 1, pageSize: 20, limit: 100);
     final asyncProducts = ref.watch(productListProvider(query));
     return 
     Scaffold(
@@ -32,7 +32,7 @@ class _CatalogPageState extends ConsumerState<CatalogPage> {
             const SizedBox(height: 12),
             Expanded(
                 child: asyncProducts.when(
-              data: (product) => GridView.builder(
+                data: (product) => GridView.builder(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     childAspectRatio: .70,

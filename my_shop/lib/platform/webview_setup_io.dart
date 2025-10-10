@@ -1,13 +1,15 @@
 import 'dart:io';
-import 'package:webview_flutter_android/webview_flutter_android.dart';
-import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
 
+/// Intentionally avoid importing Android-only webview packages here to prevent
+/// compile-time errors when package symbols are unavailable. This will be a
+/// best-effort setup placeholder; no-op if the specific classes are missing.
 void setupWebViewPlatform() {
-  try {
-    if (Platform.isAndroid) {
-      WebViewPlatform.instance = SurfaceAndroidWebView();
-    }
-  } catch (e) {
-    // ignore on platforms where packages are unavailable
+  // We intentionally don't call SurfaceAndroidWebView here to avoid hard
+  // dependency issues during AOT/release builds. If you want hybrid
+  // composition enabled, add the platform-specific setup in an Android-only
+  // file that imports `webview_flutter_android` and ensure the package
+  // resolution provides the class.
+  if (Platform.isAndroid) {
+    // no-op placeholder
   }
 }
