@@ -43,8 +43,8 @@ class Product {
     }
 
     String pickDesc() => (json['description'] ??
-            json['desc'] ??
-            json['goodsBrief'] ??
+            json['spesDesc'] ??
+            json['brief'] ??
             json['summary'] ??
             '')
         .toString();

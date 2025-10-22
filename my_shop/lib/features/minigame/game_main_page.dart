@@ -14,10 +14,22 @@ class GameMainPage extends StatelessWidget {
         route: '/minigame/maze',
       ),
       _GameCard(
-        title: '拆炸彈',
+        title: '拆炸彈 Bomb',
         subtitle: '在限時內剪對引線 +50 分',
         icon: Icons.bolt_outlined,
         route: '/minigame/bomb',
+      ),
+      _GameCard(
+        title: '电子鸡 Tamagotchi',
+        subtitle: '在限時內剪對引線 +50 分',
+        icon: Icons.bolt_outlined,
+        route: '/minigame/eTamagotchi',
+      ),
+      _GameCard(
+        title: 'Bingo',
+        subtitle: 'Bingo +50 分',
+        icon: Icons.bolt_outlined,
+        route: '/minigame/bingo',
       ),
     ];
 

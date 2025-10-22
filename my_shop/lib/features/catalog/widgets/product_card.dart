@@ -6,25 +6,62 @@ class ProductCard extends StatelessWidget {
   final Product product;
   final VoidCallback? onTap;
   const ProductCard({super.key, required this.product, this.onTap});
+
   @override
   Widget build(BuildContext context) {
     return Card(
       clipBehavior: Clip.antiAlias,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: InkWell(onTap: onTap, child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(child: CachedNetworkImage(imageUrl: product.image, fit: BoxFit.cover)),
-          Padding(padding: const EdgeInsets.all(12), child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(product.title, style: Theme.of(context).textTheme.titleMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
-              const SizedBox(height: 4),
-              Text('\$${product.price.toStringAsFixed(2)}', style: Theme.of(context).textTheme.titleLarge!.copyWith(fontWeight: FontWeight.w700)),
-            ],
-          )),
-        ],
-      )),
+      elevation: 3,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Expanded(
+              child: _buildImage(),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.title,
+                    style: Theme.of(context).textTheme.titleMedium,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '\$${product.price.toStringAsFixed(2)}',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge!
+                        .copyWith(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImage() {
+    final imageUrl = product.image;
+    if (imageUrl.isEmpty) {
+      return const Icon(Icons.image_not_supported, size: 48);
+    }
+    
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      fit: BoxFit.cover,
+      placeholder: (_, __) =>
+          const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+      errorWidget: (_, __, ___) =>
+          const Icon(Icons.broken_image, size: 48, color: Colors.grey),
     );
   }
 }

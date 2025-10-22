@@ -6,7 +6,9 @@ import 'features/auth/login_page.dart';
 import 'features/catalog/catalog_page.dart';
 import 'features/checkout/checkout_page.dart';
 import 'features/minigame/game_main_page.dart';
+import 'features/minigame/myGame/bingo/bingo_main_page.dart';
 import 'features/minigame/myGame/bomb/bomb_defuse_page.dart';
+import 'features/minigame/myGame/eTamagotchi/e_pet_page.dart';
 import 'features/minigame/myGame/maze/maze_game_page.dart';
 import 'features/product_detail/product_detail_page.dart';
 import 'features/cart/cart_page.dart';
@@ -121,6 +123,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/minigame/bomb',
         builder: (_, __) => const BombDefusePage(),
+      ),
+      GoRoute(
+        path: '/minigame/eTamagotchi',
+        builder: (_, __) => const EPetTamagotchiPage(),
+      ),
+      GoRoute(
+        path: '/minigame/bingo',
+        builder: (_, __) => const BingoMainPage(),
       ),
       GoRoute(
         path: '/product/:id',
