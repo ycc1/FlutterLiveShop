@@ -1,42 +1,106 @@
+// lib/providers/auth_providers.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/auth_service.dart';
-
-final authServiceProvider = Provider<AuthService>((_) => MockAuthService());
+import '../data/network/api_client.dart';
+import '../data/repositories/auth_repository.dart';
+import '../config/app_config.dart';
+import 'user_providers.dart'; // 👈 同步用
 
 class AuthState {
-  final String? token;
-  final String? userId;
   final bool loading;
-  final Object? error;
-  const AuthState({this.token, this.userId, this.loading = false, this.error});
-  bool get isSignedIn => token != null;
-  AuthState copyWith(
-          {String? token, String? userId, bool? loading, Object? error}) =>
+  final bool isSignedIn;
+  final String? token;
+  final String? error;
+
+  const AuthState({
+    this.loading = false,
+    this.isSignedIn = false,
+    this.token,
+    this.error,
+  });
+
+  AuthState copyWith({
+    bool? loading,
+    bool? isSignedIn,
+    String? token,
+    String? error,
+  }) =>
       AuthState(
-          token: token ?? this.token,
-          userId: userId ?? this.userId,
-          loading: loading ?? this.loading,
-          error: error);
+        loading: loading ?? this.loading,
+        isSignedIn: isSignedIn ?? this.isSignedIn,
+        token: token ?? this.token,
+        error: error,
+      );
 }
 
-class AuthNotifier extends StateNotifier<AuthState> {
-  final AuthService svc;
-  AuthNotifier(this.svc) : super(const AuthState());
-  Future<void> signIn(String email, String pwd) async {
+final _apiClientProvider = Provider<ApiClient>((ref) {
+  return ApiClient(baseUrl: AppConfig.apiBaseUrl);
+});
+
+final _authRepoProvider = Provider<AuthRepository>((ref) {
+  return AuthRepository(ref.read(_apiClientProvider));
+});
+
+class AuthController extends StateNotifier<AuthState> {
+  AuthController(this.ref, this.repo) : super(const AuthState());
+  final Ref ref;
+  final AuthRepository repo;
+
+  Future<void> signIn(String account, String password) async {
     state = state.copyWith(loading: true, error: null);
     try {
-      final r = await svc.signIn(email: email, password: pwd);
-      state = AuthState(token: r.token, userId: r.userId);
+      final userInfo = await repo.signIn(
+        accountOrMobile: account,
+        passwordOrCode: password,
+      ); // ⬅️ 这里返回的是 UserModel?（前面已改过 AuthRepository）
+
+      if (userInfo != null) {
+        // ① 同步到 meProvider
+        ref.read(meProvider.notifier).setUser(userInfo);
+
+        // ② 自身状态（token 可选）
+        final hasToken = (userInfo.token).isNotEmpty;
+
+        state = state.copyWith(
+          loading: false,
+          isSignedIn: true, // 有无 token 都算已登录（按你业务）
+          token: hasToken ? userInfo.token : null,
+          error: null,
+        );
+      } else {
+        state = state.copyWith(
+          loading: false,
+          isSignedIn: false,
+          error: '登录失败：服务器未返回用户信息',
+        );
+      }
     } catch (e) {
-      state = AuthState(error: e, loading: false);
+      state = state.copyWith(
+        loading: false,
+        isSignedIn: false,
+        error: e.toString(),
+      );
     }
   }
 
-  Future<void> signOut() async {
-    await svc.signOut();
+  // 发送短信验证码
+  Future<String?> sendOtp(String mobile) async {
+    try {
+      await repo.sendOtp(mobile: mobile);
+      return null; // null 表示成功
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
+  void signOut() {
+    // ① 清空 meProvider
+    ref.read(meProvider.notifier).logout();
+    // ② 清空自身
     state = const AuthState();
   }
 }
 
-final authProvider = StateNotifierProvider<AuthNotifier, AuthState>(
-    (ref) => AuthNotifier(ref.read(authServiceProvider)));
+final authProvider = StateNotifierProvider<AuthController, AuthState>((ref) {
+  final repo = ref.read(_authRepoProvider);
+  return AuthController(ref, repo); // 👈 传入 ref
+});

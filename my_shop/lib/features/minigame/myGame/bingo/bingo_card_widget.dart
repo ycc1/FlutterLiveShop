@@ -1,59 +1,50 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'bingo_controller.dart';
 
 class BingoCardWidget extends StatelessWidget {
-  final BingoCard card;
-  final Set<int> drawn;
-  final bool highlightWin;
-  const BingoCardWidget({
-    super.key,
-    required this.card,
-    required this.drawn,
-    required this.highlightWin,
-  });
+  final int index;
+  const BingoCardWidget({super.key, required this.index});
 
   @override
   Widget build(BuildContext context) {
-    final border = highlightWin ? Border.all(color: Colors.amber, width: 4) : Border.all(color: Colors.black26);
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 250),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(10),
-        border: border,
-        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6)],
-      ),
-      padding: const EdgeInsets.all(8),
-      child: GridView.builder(
-        itemCount: 25,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 5,
-          mainAxisSpacing: 4,
-          crossAxisSpacing: 4,
+    final ctrl = context.watch<BingoController>();
+    final card = ctrl.cards[index];
+    final selected = ctrl.selectedIndex == index;
+    final isWinner = ctrl.cardIsWinner(index); // 如果要暴露函数可改成 public getter
+
+    return InkWell(
+      onTap: ctrl.running ? null : () => ctrl.selectCard(index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: selected ? Colors.orange : Colors.black12, width: selected ? 3 : 1),
+          boxShadow: [if (isWinner) BoxShadow(color: Colors.green.withOpacity(.25), blurRadius: 16, spreadRadius: 2)],
         ),
-        itemBuilder: (_, i) {
-          final r = i ~/ 5, c = i % 5;
-          final n = card.cells[r][c];
-          final marked = drawn.contains(n);
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: marked ? Colors.lightGreen.shade400 : Colors.white,
-              borderRadius: BorderRadius.circular(6),
-              border: Border.all(color: Colors.black26),
-            ),
-            child: Text(
-              '$n',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
-                color: marked ? Colors.white : Colors.black87,
+        child: GridView.builder(
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: BingoController.cols, mainAxisSpacing: 4, crossAxisSpacing: 4),
+          itemCount: BingoController.rows * BingoController.cols,
+          itemBuilder: (_, i) {
+            final r = i ~/ BingoController.cols;
+            final c = i % BingoController.cols;
+            final n = card[r][c];
+            final hit = ctrl.drawn.contains(n);
+            return Container(
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: hit ? Colors.green.shade400 : Colors.white,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.black12),
               ),
-            ),
-          );
-        },
+              child: Text('$n', style: const TextStyle(fontWeight: FontWeight.bold)),
+            );
+          },
+        ),
       ),
     );
   }

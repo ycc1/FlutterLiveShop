@@ -55,13 +55,16 @@ class ProductCard extends StatelessWidget {
       return const Icon(Icons.image_not_supported, size: 48);
     }
     
-    return CachedNetworkImage(
-      imageUrl: imageUrl,
-      fit: BoxFit.cover,
-      placeholder: (_, __) =>
-          const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-      errorWidget: (_, __, ___) =>
-          const Icon(Icons.broken_image, size: 48, color: Colors.grey),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: CachedNetworkImage(
+        imageUrl: imageUrl,
+        fit: BoxFit.cover,
+        placeholder: (_, __) => Container(color: const Color(0xFFF5F6EE)),
+        errorWidget: (_, __, ___) => const Icon(Icons.broken_image_outlined, size: 48, color: Colors.grey),
+        // 若后端需要特定 Header（少见）
+        httpHeaders: const {'Accept': 'image/*'},
+      ),
     );
   }
 }

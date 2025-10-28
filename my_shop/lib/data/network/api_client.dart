@@ -17,6 +17,7 @@ class ApiClient {
               headers: {
                 'Content-Type': 'application/json',
                 'Host': AppConfig.apiBaseUrl,
+                'Access-Control-Allow-Origin': '*',
                 'Content-Length': '4000', // 初始值，后续会覆盖
                 'X-Platform': 'flutter' // ← 可自定义平台标识
               },

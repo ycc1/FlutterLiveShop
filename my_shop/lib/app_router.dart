@@ -2,9 +2,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import 'features/auth/login_page.dart';
 import 'features/catalog/catalog_page.dart';
 import 'features/checkout/checkout_page.dart';
+import 'features/checkout/order_model.dart';
+import 'features/checkout/order_qr_page.dart';
 import 'features/minigame/game_main_page.dart';
 import 'features/minigame/myGame/bingo/bingo_main_page.dart';
 import 'features/minigame/myGame/bomb/bomb_defuse_page.dart';
@@ -18,15 +21,49 @@ import 'features/profile/profile_page.dart';
 import 'features/live/live_page.dart';
 import 'features/recharge/recharge_page.dart';
 
-// 顶层（可选）NavigatorKey
+import 'providers/auth_providers.dart';
+import 'app_router_refresh.dart'; // ← 新增
+
 final _rootKey = GlobalKey<NavigatorState>();
 
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final refreshListenable = ref.watch(routerRefreshListenableProvider);
+  final auth = ref.watch(authProvider);
+
+  // 哪些路由需要登入
+  bool _requiresAuth(String location) {
+    return location.startsWith('/profile') ||
+        location.startsWith('/checkout') ||
+        location.startsWith('/orders') ||
+        location.startsWith('/settings');
+  }
+
   return GoRouter(
     navigatorKey: _rootKey,
-    initialLocation: '/', // 全局默认路径
+    initialLocation: '/',
+    refreshListenable: refreshListenable, // ← 关键：当 auth 变更时重算 redirect
+    redirect: (context, state) {
+      final isLoggedIn = auth.isSignedIn;
+      final loggingIn = state.uri.path == '/login';
+      final loc = state.uri.toString(); // 包含完整 URL
+
+      // 未登入访问受保护页面 → 去 /login?from=<原路径>
+      if (!isLoggedIn && _requiresAuth(loc)) {
+        final from = Uri.encodeComponent(loc);
+        return '/login?from=$from';
+      }
+
+      // 已登入却在登录页 → 回跳到 from 或首页
+      if (isLoggedIn && loggingIn) {
+        final from = state.uri.queryParameters['from'];
+        return from ?? '/';
+      }
+
+      return null;
+    },
+
     routes: [
-      // 只保留“有底部 Tab 的 4 个分支”
+      // 底部5分支（商城 / 直播 / 充值 / 小游戏 / 我的）
       StatefulShellRoute.indexedStack(
         branches: [
           // 商城
@@ -58,21 +95,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(path: '/game', builder: (_, __) => const GameMainPage()),
             ],
           ),
-          // 我的
+          // 我的（受保护：实际由 redirect 控制）
           StatefulShellBranch(
             initialLocation: '/profile',
             routes: [
               GoRoute(
-                  path: '/profile', builder: (_, __) => const ProfilePage()),
+                  path: '/profile',
+                  builder: (context, state) => const ProfilePage()),
             ],
           ),
         ],
         builder: (context, state, navShell) {
-          // 防止 selectedIndex 越界
-          final safeIndex = navShell.currentIndex.clamp(0, 3);
-          // 调试打印（可留可删）
-          // print('🔹 currentIndex=${navShell.currentIndex} fullPath=${state.fullPath}');
-
+          // 分支有 5 个 → 索引 0..4
+          final safeIndex = navShell.currentIndex.clamp(0, 4);
           return Scaffold(
             body: navShell,
             bottomNavigationBar: NavigationBar(
@@ -95,42 +130,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // ✅ 这些不要放在 StatefulShellRoute 里，否则会多出分支数量
-      GoRoute(
-        path: '/cart',
-        builder: (_, __) => const CartPage(),
-      ),
-      GoRoute(
-        path: '/checkout',
-        builder: (_, __) => const CheckoutPage(),
-      ),
+      // 其余独立路由（不要放进 StatefulShellRoute）
+      GoRoute(path: '/cart', builder: (_, __) => const CartPage()),
+      GoRoute(path: '/checkout', builder: (_, __) => const CheckoutPage()),
       GoRoute(
         path: '/login',
-        builder: (_, __) => const LoginPage(),
+        builder: (context, state) => LoginPage(
+          from: state.uri.queryParameters['from'], // ← 传入来源
+        ),
       ),
+      GoRoute(path: '/settings', builder: (_, __) => const SettingPage()),
+      GoRoute(path: '/vip', builder: (_, __) => const VipPage()),
+      GoRoute(path: '/minigame/maze', builder: (_, __) => const MazeGamePage()),
       GoRoute(
-        path: '/settings',
-        builder: (_, __) => const SettingPage(),
-      ),
+          path: '/minigame/bomb', builder: (_, __) => const BombDefusePage()),
       GoRoute(
-        path: '/vip',
-        builder: (_, __) => const VipPage(),
-      ),
+          path: '/minigame/eTamagotchi',
+          builder: (_, __) => const EPetTamagotchiPage()),
       GoRoute(
-        path: '/minigame/maze',
-        builder: (_, __) => const MazeGamePage(),
-      ),
+          path: '/minigame/bingo', builder: (_, __) => const BingoMainPage()),
       GoRoute(
-        path: '/minigame/bomb',
-        builder: (_, __) => const BombDefusePage(),
-      ),
-      GoRoute(
-        path: '/minigame/eTamagotchi',
-        builder: (_, __) => const EPetTamagotchiPage(),
-      ),
-      GoRoute(
-        path: '/minigame/bingo',
-        builder: (_, __) => const BingoMainPage(),
+        path: '/orderQR',
+        builder: (context, state) {
+          final data = state.extra as OrderCreateResponse;
+          return OrderQrPage(order: data);
+        },
       ),
       GoRoute(
         path: '/product/:id',

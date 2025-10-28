@@ -1,14 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/cart_providers.dart';
 import 'package:go_router/go_router.dart';
+import '../../providers/cart_providers.dart';
+import '../../providers/auth_providers.dart'; // ← 新增
 
 class CartPage extends ConsumerWidget {
   const CartPage({super.key});
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(cartStateProvider);
     final total = ref.read(cartStateProvider.notifier).total;
+    final auth = ref.watch(authProvider); // ← 读登入状态
+
+    Future<void> goCheckout() async {
+      if (auth.isSignedIn) {
+        context.push('/checkout');
+        return;
+      }
+      // 未登入：跳登录页，等登录成功再继续
+      final ok = await context.push<bool>('/login'); // 登录页成功后 pop(true)
+      if (ok == true && context.mounted) {
+        context.push('/checkout');
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('購物車')),
       body: items.isEmpty
@@ -29,11 +45,13 @@ class CartPage extends ConsumerWidget {
           padding: const EdgeInsets.all(12),
           child: Row(children: [
             Expanded(
-                child: Text('合計：\$${total.toStringAsFixed(2)}',
-                    style: Theme.of(context).textTheme.titleLarge)),
+              child: Text('合計：\$${total.toStringAsFixed(2)}',
+                  style: Theme.of(context).textTheme.titleLarge),
+            ),
             FilledButton(
-                onPressed: () => context.push('/checkout'),
-                child: const Text('結帳')),
+              onPressed: goCheckout, // ← 用上面方法
+              child: const Text('結帳'),
+            ),
           ]),
         ),
       ),

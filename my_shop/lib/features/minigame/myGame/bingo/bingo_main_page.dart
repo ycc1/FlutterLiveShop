@@ -1,109 +1,93 @@
-// import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'bingo_ball_drawer.dart';
+import 'package:provider/provider.dart';
 import 'bingo_controller.dart';
 import 'bingo_card_widget.dart';
+import 'bingo_ball_drawer.dart';
+import 'bingo_result_overlay.dart';
 
-class BingoMainPage extends ConsumerWidget {
+class BingoMainPage extends StatelessWidget {
   const BingoMainPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final s = ref.watch(bingoProvider);
-    final c = ref.read(bingoProvider.notifier);
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => BingoController(),
+      child: const _BingoView(),
+    );
+  }
+}
 
-    // 中奖音效
-    if (s.showWinAnim) {
-      // final player = AudioPlayer();
-      // player.play(AssetSource('sounds/win.mp3')); // 你可放在 assets/sounds/win.mp3
-      Future.delayed(const Duration(seconds: 3), c.hideWinAnim);
-    }
+class _BingoView extends StatelessWidget {
+  const _BingoView();
 
+  @override
+  Widget build(BuildContext context) {
+    final ctrl = context.watch<BingoController>();
     return Scaffold(
-      appBar: AppBar(title: const Text('Bingo')),
-      body: Stack(
+      backgroundColor: const Color(0xfff6f6ea),
+      appBar: AppBar(
+        title: const Text('Bingo'),
+        backgroundColor: const Color(0xfff6f6ea),
+        actions: [
+          Center(
+            child: Row(
+              children: [
+                _stat('Kredit', ctrl.credit.toString()),
+                _stat('Pusta', ctrl.bet.toString()),
+                _stat('Panalo', ctrl.winThisRound.toString()),
+                _stat('Balls', '${ctrl.drawn.length}/90'),
+              ],
+            ),
+          )
+        ],
+      ),
+      body: Column(
         children: [
-          Column(
-            children: [
-              _topStats(context, s),
-              BingoBallStrip(history: s.history),
-              const SizedBox(height: 8),
-              Expanded(
-                child: GridView.builder(
-                  padding: const EdgeInsets.all(12),
-                  itemCount: s.numCards,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, mainAxisSpacing: 10, crossAxisSpacing: 10, childAspectRatio: 1.05),
-                  itemBuilder: (_, i) {
-                    final card = s.cards[i];
-                    final win = card.getBingo(s.drawn);
-                    return BingoCardWidget(card: card, drawn: s.drawn, highlightWin: win);
-                  },
-                ),
-              ),
-              _bottomControls(context, s, c),
-            ],
+          BingoBallDrawer(numbers: ctrl.drawn.toList()),
+          Expanded(
+            child: GridView.builder(
+              padding: const EdgeInsets.all(12),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2, mainAxisSpacing: 12, crossAxisSpacing: 12, childAspectRatio: 1.1),
+              itemCount: ctrl.cards.length,
+              itemBuilder: (context, i) => BingoCardWidget(index: i),
+            ),
           ),
-          if (s.showWinAnim) _winOverlay(context),
+          _bottomBar(context),
+          if (!ctrl.running && ctrl.winThisRound > 0)
+            const BingoResultOverlay(),
         ],
       ),
     );
   }
 
-  Widget _topStats(BuildContext context, BingoState s) {
-    TextStyle bold = const TextStyle(fontWeight: FontWeight.bold);
-    return Container(
-      color: Colors.amber.shade100,
-      padding: const EdgeInsets.all(8),
-      child: Row(
-        children: [
-          Text('💰 Kredit: ${s.kredit}', style: bold),
-          const SizedBox(width: 12),
-          Text('🎯 Pusta: ${s.pusta}', style: bold),
-          const SizedBox(width: 12),
-          Text('🏆 Panalo: ${s.panalo}', style: bold.copyWith(color: Colors.green.shade700)),
-          const Spacer(),
-          Text('Balls: ${s.history.length}/90', style: bold),
-        ],
-      ),
-    );
-  }
-
-  Widget _bottomControls(BuildContext context, BingoState s, BingoController c) {
+  Widget _bottomBar(BuildContext context) {
+    final ctrl = context.read<BingoController>();
     return Container(
       padding: const EdgeInsets.all(12),
+      color: Colors.white,
       child: Row(
         children: [
-          IconButton(onPressed: () => c.changePusta(-1), icon: const Icon(Icons.remove_circle_outline)),
-          Text('${s.pusta}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          IconButton(onPressed: () => c.changePusta(1), icon: const Icon(Icons.add_circle_outline)),
-          const SizedBox(width: 12),
-          FilledButton(onPressed: s.running ? c.stop : c.start, child: Text(s.running ? 'STOP' : 'START')),
-          const SizedBox(width: 12),
-          OutlinedButton(onPressed: c.shuffleAll, child: const Text('CHANGE NUMBERS')),
+          IconButton(
+              onPressed: !ctrl.running ? ctrl.decreaseBet : null,
+              icon: const Icon(Icons.remove_circle_outline)),
+          Text('${ctrl.bet}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+          IconButton(
+              onPressed: !ctrl.running ? ctrl.increaseBet : null,
+              icon: const Icon(Icons.add_circle_outline)),
+          const Spacer(),
+          FilledButton.tonal(
+              onPressed: ctrl.running ? ctrl.stopGame : ctrl.startGame,
+              child: Text(ctrl.running ? 'STOP' : 'START')),
+          const SizedBox(width: 8),
+          FilledButton(onPressed: ctrl.running ? null : ctrl.changeNumbers, child: const Text('CHANGE NUMBERS')),
         ],
       ),
     );
   }
 
-  Widget _winOverlay(BuildContext context) {
-    return AnimatedOpacity(
-      opacity: 1,
-      duration: const Duration(milliseconds: 300),
-      child: Container(
-        color: Colors.black54,
-        alignment: Alignment.center,
-        child: const Text(
-          '🎉 BINGO! 🎉',
-          style: TextStyle(
-            fontSize: 60,
-            color: Colors.yellow,
-            fontWeight: FontWeight.w900,
-            shadows: [Shadow(blurRadius: 10, color: Colors.red)],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _stat(String k, String v) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        child: Text('$k: $v', style: const TextStyle(fontWeight: FontWeight.w600)),
+      );
 }

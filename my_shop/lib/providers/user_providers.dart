@@ -44,6 +44,10 @@ class UserNotifier extends StateNotifier<AsyncValue<UserProfile>> {
       state = AsyncError(e, st);
     }
   }
+
+  void setUser(UserProfile user) => state = AsyncData(user);
+
+  Future<void> logout() async => state = AsyncData(UserProfile.mock());
 }
 
 final meProvider = StateNotifierProvider<UserNotifier, AsyncValue<UserProfile>>(

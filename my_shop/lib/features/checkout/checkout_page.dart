@@ -1,8 +1,13 @@
+//结账页
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/auth_providers.dart';
 import '../../providers/cart_providers.dart';
 import '../../services/payment_service.dart';
 import '../../providers/user_providers.dart';
+import '../checkout/order_service.dart';
+import '../checkout/order_model.dart';
+import 'package:go_router/go_router.dart';
 
 final paymentServiceProvider =
     Provider<PaymentService>((_) => MockPaymentService());
@@ -63,48 +68,46 @@ class CheckoutPage extends ConsumerWidget {
             child: FilledButton(
               onPressed: () async {
                 final user = ref.read(meProvider).valueOrNull;
+                final auth = ref.read(authProvider);
+                print(ref.read(meProvider).value);
+
                 if (user == null) {
                   ScaffoldMessenger.of(context)
                       .showSnackBar(const SnackBar(content: Text('请登录后再结账')));
                   return;
                 }
 
-                final balance = user.balance;
-                double need = total;
+                final items = ref.read(cartStateProvider);
+                final total = ref.read(cartStateProvider.notifier).total;
 
-                // 1) 先用余额尽可能抵扣
-                if (balance > 0) {
-                  final use = balance >= need ? need : balance;
-                  if (use > 0) {
-                    await ref.read(meProvider.notifier).deductBalance(use);
-                    need -= use;
-                  }
+                final orderItems = items
+                    .map((it) => {
+                          'productId': it.product.id,
+                          'title': it.product.title,
+                          'qty': it.qty,
+                          'price': it.product.price,
+                          'subtotal': it.subtotal,
+                        })
+                    .toList();
+
+                // 🔹 呼叫 API 建立訂單
+                final svc = OrderService();
+                final res = await svc.createOrder(
+                  userId: user.id.toString(),
+                  total: total,
+                  items: orderItems,
+                  token: auth.token ?? '',
+                );
+
+                if (res == null) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(const SnackBar(content: Text('建立订单失败')));
+                  return;
                 }
 
-                // 2) 如仍不足，走外部支付（Mock）
-                if (need > 1e-6) {
-                  final svc = ref.read(paymentServiceProvider);
-                  final intent =
-                      await svc.createIntent((need * 100).round()); // 分
-                  final ok = await svc.confirm(intent.id);
-                  if (!ok) {
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('外部支付失败')));
-                    }
-                    return;
-                  }
-                }
-
-                // 3) 成功后：清空购物车 + 送积分（例：1 元 = 10 积分）
-                final points = (total * 10).round();
-                await ref.read(meProvider.notifier).addPoints(points);
-                await ref.read(cartStateProvider.notifier).clear();
-
+                // ✅ 跳转付款 QR 页面
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('支付成功，积分 +$points')));
-                  Navigator.pop(context);
+                  context.push('/orderQR', extra: res);
                 }
               },
               child: const Text('立即支付'),

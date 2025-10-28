@@ -1,38 +1,42 @@
 class UserProfile {
-  final String id;
-
   /// 用户ID
-  final String userName;
+  final int id;
 
   /// 用户名
-  final String? nickName;
+  final String userName;
 
   /// 昵称
-  final String email;
+  final String? nickName;
 
   /// 邮箱
-  final String mobile;
+  final String email;
 
   /// 手机号
-  final int sex;
+  final String mobile;
 
   /// 性别[1男2女3未知]
-  final DateTime birthday;
+  final int sex;
 
   /// 生日
-  final String avatarImage;
+  final DateTime birthday;
 
   /// 头像
-  final String parentUserName;
+  final String avatarImage;
 
   /// 推荐人
-  final int points;
+  final String parentUserName;
 
   /// 累计积分（用于 VIP 升级）
+  final int points;
+
+  /// 钱包余额
+  final double balance;
+
+  /// VIP 等级
   final String vipLevel;
 
-  /// VIP 等级：Bronze / Silver / Gold / Platinum
-  final double balance;
+  /// 用户 token
+  final String token;
 
   /// 钱包余额（货币单位自己定义：₱/NT$/USD）
 
@@ -47,41 +51,78 @@ class UserProfile {
     required this.avatarImage,
     this.parentUserName = "",
     this.points = 0,
-    this.vipLevel = 'Bronze',
     this.balance = 0.0,
+    required this.vipLevel,
+    required this.token,
   });
 
   UserProfile copyWith({
-    String? id,
-    String? name,
+    int? id,
+    String? userName,
     String? nickName,
     String? email,
     String? mobile,
     int? sex,
+    DateTime? birthday,
     String? avatarImage,
     String? parentUserName,
     int? points,
-    String? vipLevel,
     double? balance,
+    String? vipLevel,
+    String? token,
   }) {
     return UserProfile(
       id: id ?? this.id,
-      userName: name ?? userName,
+      userName: userName ?? this.userName,
       nickName: nickName ?? this.nickName,
       email: email ?? this.email,
       mobile: mobile ?? this.mobile,
       sex: sex ?? this.sex,
-      birthday: birthday,
+      birthday: birthday ?? this.birthday,
       avatarImage: avatarImage ?? this.avatarImage,
       parentUserName: parentUserName ?? this.parentUserName,
       points: points ?? this.points,
-      vipLevel: vipLevel ?? this.vipLevel,
       balance: balance ?? this.balance,
+      vipLevel: vipLevel ?? this.vipLevel,
+      token: token ?? this.token,
     );
   }
 
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    return UserProfile(
+      id: json['userId'] ?? json['userId'] ?? 0,
+      userName: json['userName'] ?? '',
+      nickName: json['nickName'] ?? '',
+      email: json['email'] ?? '',
+      mobile: json['mobile'] ?? '',
+      sex: json['sex'] ?? 0,
+      birthday: json['birthday'] ?? DateTime(1990, 1, 1),
+      avatarImage: json['avatarImage'] ?? '',
+      parentUserName: json['parentUserName'] ?? '',
+      points: json['points'] ?? 0,
+      balance: (json['balance'] ?? 0).toDouble(),
+      vipLevel: json['vipLevel'] ?? '',
+      token: json['token'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'userName': userName,
+        'email': email,
+        'mobile': mobile,
+        'sex': sex,
+        'birthday': birthday.toIso8601String(),
+        'avatarImage': avatarImage,
+        'parentUserName': parentUserName,
+        'points': points,
+        'balance': balance,
+        'vipLevel': vipLevel,
+        'token': token,
+      };
+
   factory UserProfile.mock() => UserProfile(
-        id: 'u001',
+        id: 0,
         userName: 'testuser',
         nickName: '测试用户',
         email: 'user@example.com',
@@ -91,7 +132,8 @@ class UserProfile {
         avatarImage: '',
         parentUserName: '',
         points: 0,
-        vipLevel: 'Bronze',
         balance: 0.0,
+        vipLevel: 'Bronze',
+        token: '',
       );
 }
