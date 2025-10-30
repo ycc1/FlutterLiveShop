@@ -1,8 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../config/app_config.dart';
 import '../../data/models/product.dart';
-import '../../providers/product_providers.dart';
+import '../../providers/api_providers.dart';
 import '../../providers/cart_providers.dart';
 
 class ProductDetailPage extends ConsumerWidget {
@@ -11,6 +12,12 @@ class ProductDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final repo = ref.read(productRepoProvider);
+    final httpHeader = {'Content-Type': 'application/json',
+                      'Host': AppConfig.apiBaseUrl,
+                      'Access-Control-Allow-Origin': '*',
+                      'Content-Length': '4000', // 初始值，后续会覆盖
+                      'X-Platform': 'flutter', // ← 可自定义平台标识};
+                    };
     return FutureBuilder<Product>(
       future: repo.byId(id),
       builder: (context, snapshot) {
@@ -23,7 +30,7 @@ class ProductDetailPage extends ConsumerWidget {
             children: [
               AspectRatio(
                 aspectRatio: 4/3,
-                child: CachedNetworkImage(imageUrl: p.image, fit: BoxFit.cover),
+                child: CachedNetworkImage(imageUrl: p.image, fit: BoxFit.cover, httpHeaders: httpHeader,),
               ),
               const SizedBox(height: 12),
               Text(p.title, style: Theme.of(context).textTheme.headlineSmall),

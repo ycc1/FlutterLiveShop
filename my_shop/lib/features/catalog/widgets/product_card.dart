@@ -63,7 +63,7 @@ class ProductCard extends StatelessWidget {
         placeholder: (_, __) => Container(color: const Color(0xFFF5F6EE)),
         errorWidget: (_, __, ___) => const Icon(Icons.broken_image_outlined, size: 48, color: Colors.grey),
         // 若后端需要特定 Header（少见）
-        httpHeaders: const {'Accept': 'image/*'},
+        httpHeaders: const {'Accept': 'image/*','Access-Control-Allow-Origin': '*',},
       ),
     );
   }

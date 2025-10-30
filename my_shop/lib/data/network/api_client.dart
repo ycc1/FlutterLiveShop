@@ -1,13 +1,17 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io' show Platform;
 import '../../config/app_config.dart';
+import '../../providers/auth_providers.dart';
 
 class ApiClient {
   final Dio _dio;
+  final Ref ref;
 
   ApiClient({
     String baseUrl = AppConfig.apiBaseUrl, // ← 改这里即可切环境
+    required this.ref,
     Dio? dio,
   }) : _dio = dio ??
             Dio(BaseOptions(
@@ -19,9 +23,18 @@ class ApiClient {
                 'Host': AppConfig.apiBaseUrl,
                 'Access-Control-Allow-Origin': '*',
                 'Content-Length': '4000', // 初始值，后续会覆盖
-                'X-Platform': 'flutter' // ← 可自定义平台标识
+                'X-Platform': 'flutter', // ← 可自定义平台标识
               },
             )) {
+    _dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) {
+        final t = ref.read(authProvider).token;
+        if (t != null && t.isNotEmpty) {
+          options.headers['Authorization'] = 'Bearer $t';
+        }
+        handler.next(options);
+      },
+    ));
     // ✅ 打印所有请求/响应
     /*
     _dio.interceptors.add(LogInterceptor(

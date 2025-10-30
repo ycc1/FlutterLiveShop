@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/product_providers.dart';
+import '../../providers/api_providers.dart';
 import 'widgets/product_card.dart';
 import 'widgets/search_bar.dart';
 import 'package:go_router/go_router.dart';

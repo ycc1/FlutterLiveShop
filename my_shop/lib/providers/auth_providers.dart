@@ -33,7 +33,7 @@ class AuthState {
 }
 
 final _apiClientProvider = Provider<ApiClient>((ref) {
-  return ApiClient(baseUrl: AppConfig.apiBaseUrl);
+  return ApiClient(baseUrl: AppConfig.apiBaseUrl, ref: ref); // ← 改成你的 API Host
 });
 
 final _authRepoProvider = Provider<AuthRepository>((ref) {

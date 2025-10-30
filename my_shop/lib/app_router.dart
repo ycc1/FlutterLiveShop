@@ -17,6 +17,7 @@ import 'features/product_detail/product_detail_page.dart';
 import 'features/cart/cart_page.dart';
 import 'features/profile/Setting/setting_page.dart';
 import 'features/profile/VIP/vip_page.dart';
+import 'features/profile/oder/order_page.dart';
 import 'features/profile/profile_page.dart';
 import 'features/live/live_page.dart';
 import 'features/recharge/recharge_page.dart';
@@ -156,6 +157,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return OrderQrPage(order: data);
         },
       ),
+      GoRoute(path: '/orderpage', builder: (_, __) => const OrderPage()),
       GoRoute(
         path: '/product/:id',
         name: 'product_detail',

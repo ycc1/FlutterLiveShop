@@ -7,68 +7,50 @@ import '../../data/network/api_client.dart';
 import 'order_model.dart';
 
 class OrderService {
-  final String baseUrl;
+  final ApiClient api;
+  OrderService(this.api);
 
-  const OrderService({
-    this.baseUrl = AppConfig.apiBaseUrl,
-  });
-
-  // 建立訂單
   Future<OrderCreateResponse?> createOrder({
     required String userId,
     required double total,
-    required String token,
-    required List<Map<String, dynamic>> items,
+    List<Map<String, dynamic>> items = const [],
   }) async {
-    final url = Uri.parse('$baseUrl/api/Order/CreateOrderv1');
-    final body = {
-      'userId': userId,
-      'totalAmount': total,
-      'paymentMethod': 'GCash', // or Maya, Wallet...
-      'items': items,
-    };
-
-    final res = await http.post(
-      url,
-      headers: {
-        'Content-Type': 'application/json',
-        'Host': AppConfig.apiBaseUrl,
-        'Access-Control-Allow-Origin': '*',
-        'Content-Length': '4000', // 初始值，后续会覆盖
-        'X-Platform': 'flutter', // ← 可自定义平台标识
-        'Authorization': 'Bearer $token',
+    final res = await api.post<String>(
+      '/api/Order/CreateOrderv1',
+      data: {
+        'userId': userId,
+        'totalAmount': total,
+        'paymentMethod': 'GCash',
+        'items': items,
       },
-      body: jsonEncode(body),
     );
-
-    if (res.statusCode == 200) {
-      final data = jsonDecode(res.body);
-      return OrderCreateResponse.fromJson(data);
-    } else {
-      print('❌ CreateOrder failed: ${res.statusCode} ${res.body}');
-      return null;
-    }
+    final root = jsonDecode(res.data ?? '{}');
+    final data = root['data'];
+    final first = (data is List && data.isNotEmpty) ? data.first : null;
+    return (first is Map<String, dynamic>)
+        ? OrderCreateResponse.fromJson(first)
+        : null;
   }
 
-  // 取得使用者所有訂單
-  Future<List<OrderModel>> getOrders(String userId) async {
-    final url = Uri.parse('$baseUrl/api/Order/GetOrderList?userId=$userId');
-    final res = await http.get(url);
-    if (res.statusCode == 200) {
-      final data = jsonDecode(res.body) as List;
-      return data.map((e) => OrderModel.fromJson(e)).toList();
-    }
-    return [];
+  Future<List<OrderModel>> getOrders(int page) async {
+    final res = await api.post<String>(
+      '/api/Order/GetOrderList',
+      data: {'page': page, 'limit': 200},
+    );
+    final root = jsonDecode(res.data ?? '[]');
+    dynamic box = root;
+    if (box is Map && box['data'] is Map) box = box['data'];
+    final list = (box is Map && box['list'] is List)
+        ? box['list'] as List
+        : (root is List ? root : []);
+    return list
+        .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
-  // 重新取得付款 QRCode
   Future<String?> getPaymentQr(int orderId) async {
-    final url = Uri.parse('$baseUrl/api/Order/GetPaymentQRCode/$orderId');
-    final res = await http.get(url);
-    if (res.statusCode == 200) {
-      final data = jsonDecode(res.body);
-      return data['qrCodeUrl'];
-    }
-    return null;
+    final res = await api.get<String>('/api/Order/GetPaymentQRCode/$orderId');
+    final root = jsonDecode(res.data ?? '{}');
+    return (root is Map) ? root['qrCodeUrl'] as String? : null;
   }
 }

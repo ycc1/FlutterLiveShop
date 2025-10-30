@@ -1,6 +1,8 @@
 //结账页
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/network/api_client.dart';
+import '../../providers/api_providers.dart';
 import '../../providers/auth_providers.dart';
 import '../../providers/cart_providers.dart';
 import '../../services/payment_service.dart';
@@ -91,12 +93,12 @@ class CheckoutPage extends ConsumerWidget {
                     .toList();
 
                 // 🔹 呼叫 API 建立訂單
-                final svc = OrderService();
+                final api = ref.read(apiClientProvider); // ✅
+                final svc = OrderService(api);
                 final res = await svc.createOrder(
                   userId: user.id.toString(),
                   total: total,
                   items: orderItems,
-                  token: auth.token ?? '',
                 );
 
                 if (res == null) {

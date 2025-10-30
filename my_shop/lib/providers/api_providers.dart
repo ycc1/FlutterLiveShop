@@ -5,6 +5,7 @@ import '../data/repositories/product_local_repository.dart';
 import '../data/repositories/product_repository.dart';
 import '../data/sources/product_source.dart';
 import '../data/network/api_client.dart';
+import 'auth_providers.dart';
 
 /*
 final productSourceProvider = Provider<ProductSource>((ref) => InMemoryProductSource());
@@ -44,7 +45,11 @@ class ProductQuery {
 }
 
 final apiClientProvider = Provider<ApiClient>((ref) {
-  return ApiClient(baseUrl: AppConfig.apiBaseUrl); // ← 改成你的 API Host
+  final auth = ref.read(authProvider);
+  return ApiClient(
+    baseUrl: AppConfig.apiBaseUrl,
+    ref: ref,
+  ); // ← 改成你的 API Host
 });
 
 final productRepoProvider = Provider<ProductRepository>((ref) {

@@ -5,7 +5,7 @@ import '../data/repositories/product_repository.dart';
 import '../data/sources/cart_source.dart';
 import '../features/chat/chat_service.dart';
 import '../features/chat/socketio_chat_service.dart';
-import 'product_providers.dart';
+import 'api_providers.dart';
 
 final cartSourceProvider = Provider<CartSource>((ref) => InMemoryCartSource());
 final cartRepoProvider = Provider<CartRepository>(

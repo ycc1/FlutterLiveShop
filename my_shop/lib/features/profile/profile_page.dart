@@ -95,9 +95,10 @@ class ProfilePage extends ConsumerWidget {
                 leading: Icon(Icons.location_on_outlined),
                 title: Text('地址管理'),
               ),
-              const ListTile(
+              ListTile(
                 leading: Icon(Icons.receipt_long_outlined),
                 title: Text('訂單記錄'),
+                onTap: () => context.push('/orderpage'),
               ),
               ListTile(
                 leading: const Icon(Icons.settings_outlined),
