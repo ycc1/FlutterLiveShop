@@ -60,4 +60,8 @@ class AuthRepository {
     await api.post<String>('/SMS/Laaffic/SendOTP/send-otp',
         data: {'numbers': mobile});
   }
+
+  Future<void> sendEMailOtp({required String email}) async {
+    await api.post<String>('/Mail/SendOTP/send-otp', data: {'email': email});
+  }
 }

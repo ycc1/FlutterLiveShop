@@ -92,6 +92,16 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
+  // 发送短信验证码
+  Future<String?> sendEmailOtp(String email) async {
+    try {
+      await repo.sendEMailOtp(email: email);
+      return null; // null 表示成功
+    } catch (e) {
+      return e.toString();
+    }
+  }
+
   void signOut() {
     // ① 清空 meProvider
     ref.read(meProvider.notifier).logout();
